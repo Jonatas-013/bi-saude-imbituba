@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BI Saúde Imbituba | Inteligência Orçamentária, Contratos e Auditoria</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Estilos Customizados -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="text-slate-800 antialiased">
+
+    <!-- TOPBAR EXECUTIVA -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500 p-2.5 rounded-xl shadow-inner">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-slate-950"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-lg tracking-tight">BI Fundo Municipal de Saúde de Imbituba</h1>
+                        <span id="badgeStatusTopo" class="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">209 Refs + 109 Auditorias Ativas</span>
+                    </div>
+                    <p class="text-xs text-slate-400">
+                        Orçado Atualizado: <strong class="text-white">R$ 97.046.202,74</strong> • 
+                        Empenhado: <strong class="text-amber-300">R$ 68.424.029,25</strong> • 
+                        Livre Real: <strong class="text-emerald-400">R$ 23.030.757,01</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filtros Globais + Exportação -->
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs">
+                    <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-400 mr-1.5"></i>
+                    <select id="filtroBlocoGlobal" class="bg-transparent text-white font-semibold focus:outline-none cursor-pointer max-w-[180px] truncate">
+                        <option value="TODOS" class="bg-slate-900">Todas as Ações</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs">
+                    <i data-lucide="hash" class="w-3.5 h-3.5 text-blue-400 mr-1.5"></i>
+                    <select id="filtroDotacaoGlobal" class="bg-transparent text-white font-semibold focus:outline-none cursor-pointer max-w-[190px] truncate">
+                        <option value="TODAS" class="bg-slate-900">Todas as Refs (Dotações)</option>
+                    </select>
+                </div>
+
+                <button onclick="exportarCSVTelaAtual()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+                    <i data-lucide="sheet" class="w-4 h-4 text-emerald-400"></i> CSV
+                </button>
+
+                <button onclick="gerarPDFRelatorio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+                    <i data-lucide="file-down" class="w-4 h-4"></i> Relatório PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- MENU DE NAVEGAÇÃO (6 ABAS - SINCRONIZADOR IPM POR ÚLTIMO) -->
+        <div class="bg-slate-950/60 border-t border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-1 py-1.5">
+                <button id="btn-aba-dashboard" onclick="trocarAba('aba-dashboard', this)" class="tab-btn active px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent whitespace-nowrap">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-400"></i> 1. Visão Executiva (BI)
+                </button>
+                <button id="btn-aba-dotacoes" onclick="trocarAba('aba-dotacoes', this)" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent whitespace-nowrap">
+                    <i data-lucide="search-check" class="w-4 h-4 text-blue-400"></i> 2. Onde Posso Gastar?
+                </button>
+                <button id="btn-aba-emendas" onclick="trocarAba('aba-emendas', this)" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent whitespace-nowrap">
+                    <i data-lucide="stamp" class="w-4 h-4 text-amber-400"></i> 3. Emendas Livres (R$ 5,29 Mi)
+                </button>
+                <button id="btn-aba-fixos" onclick="trocarAba('aba-fixos', this)" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent whitespace-nowrap">
+                    <i data-lucide="calendar-clock" class="w-4 h-4 text-indigo-400"></i> 4. Contratos & Tesouraria
+                </button>
+                <button id="btn-aba-auditoria" onclick="trocarAba('aba-auditoria', this)" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-rose-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent bg-rose-950/40 whitespace-nowrap">
+                    <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400"></i> 5. 🔍 Auditoria Empenhos Parados
+                </button>
+                <button id="btn-aba-importacao" onclick="trocarAba('aba-importacao', this)" class="tab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent whitespace-nowrap">
+                    <i data-lucide="upload-cloud" class="w-4 h-4 text-purple-400"></i> 6. Sincronizador IPM
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="areaRelatorioPDF" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Cabeçalho Exclusivo para o PDF -->
+        <div id="cabecalhoPDF" class="hidden border-b-2 border-slate-800 pb-4 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900 uppercase">Fundo Municipal de Saúde de Imbituba (Órgão 25)</h2>
+                    <p class="text-sm text-slate-600 font-medium">Relatório de Inteligência Orçamentária, Contratos e Auditoria de Empenhos</p>
+                </div>
+                <div class="text-right text-xs text-slate-500">
+                    <p><strong>Emissão:</strong> <span id="dataHoraPDF"></span></p>
+                    <p><strong>Filtro Ativo:</strong> <span id="blocoSelecionadoPDF">Todos</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 1: VISÃO EXECUTIVA -->
+        <section id="aba-dashboard" class="tab-content active space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div onclick="drillDownOrcamento()" class="kpi-card bg-white p-4 rounded-xl border-l-4 border-slate-900 border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] font-bold uppercase text-slate-500">1. Orçamento & Empenhos</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold flex items-center gap-1">Ver Todos <i data-lucide="arrow-up-right" class="w-3 h-3"></i></span>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-900 mt-1" id="kpiOrcadoAtual">R$ 97.046.202,74</h3>
+                    <p class="text-xs text-slate-600 mt-1" id="kpiSubOrcado">Empenhado: <strong>R$ 68.424.029,25</strong> (Clique p/ abrir)</p>
+                </div>
+
+                <div onclick="drillDownTesouraria()" class="kpi-card bg-blue-50/80 border-l-4 border-blue-600 border border-blue-200 p-4 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] font-bold uppercase text-blue-800">2. Na Tesouraria (Liquidados)</span>
+                        <span class="text-[10px] bg-blue-200/80 text-blue-900 px-2 py-0.5 rounded font-bold flex items-center gap-1">Ver Lista <i data-lucide="arrow-up-right" class="w-3 h-3"></i></span>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-blue-900 mt-1">R$ 648.365,10</h3>
+                    <p class="text-xs text-blue-800 mt-1"><strong>149 lançamentos</strong> já atestados aguardando pagamento</p>
+                </div>
+
+                <div onclick="drillDownAuditoria()" class="kpi-card bg-rose-50/80 border-l-4 border-rose-600 border border-rose-200 p-4 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] font-bold uppercase text-rose-800">3. Empenhos Parados (+60d)</span>
+                        <span class="text-[10px] bg-rose-200/80 text-rose-900 px-2 py-0.5 rounded font-bold flex items-center gap-1">Auditar <i data-lucide="arrow-up-right" class="w-3 h-3"></i></span>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-rose-900 mt-1" id="kpiParadosTopo">R$ 854.939,42</h3>
+                    <p class="text-xs text-rose-700 mt-1"><strong>109 empenhos travados</strong> p/ estornar ou cobrar NF</p>
+                </div>
+
+                <div onclick="drillDownEmendas()" class="kpi-card bg-amber-50/80 border-l-4 border-amber-500 border border-amber-200 p-4 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[11px] font-bold uppercase text-amber-900">4. Emendas Livres Sem Uso</span>
+                        <span class="text-[10px] bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded font-bold flex items-center gap-1">Abrir Refs <i data-lucide="arrow-up-right" class="w-3 h-3"></i></span>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-amber-900 mt-1" id="kpiEmendasLivres">R$ 5.297.628,27</h3>
+                    <p class="text-xs text-amber-800 mt-1"><strong>73 Refs de Emendas</strong> com saldo livre p/ reserva</p>
+                </div>
+            </div>
+
+            <!-- GRÁFICO BI 1: EVOLUÇÃO MENSAL + SIMULAÇÃO -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Série Histórica Real IPM + Projeção</span>
+                        <h3 class="font-extrabold text-slate-900 text-sm mt-1">Evolução Mensal da Execução (Jan a Nov/2026) & Simulação de Fechamento (Dez/2026)</h3>
+                        <p class="text-xs text-slate-500">Média mensal liquidada (Jan–Out): <strong>R$ 6.058.631,58/mês</strong>. Ajuste o ritmo projetado para Nov/Dez ao lado:</p>
+                    </div>
+                    <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl no-print">
+                        <label class="text-xs font-bold text-slate-700">Simular Ritmo Nov/Dez:</label>
+                        <select id="selectSimulacaoMensal" onchange="atualizarGraficoMensal()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900">
+                            <option value="1.0">Cenário Base (100% da média = R$ 6,05 Mi/mês)</option>
+                            <option value="1.2">Cenário Acelerado (+20% fim de ano = R$ 7,27 Mi/mês)</option>
+                            <option value="0.85">Cenário Contenção (-15% economia = R$ 5,15 Mi/mês)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="h-72">
+                    <canvas id="chartEvolucaoMensal"></canvas>
+                </div>
+            </div>
+
+            <!-- GRÁFICOS BI 2 E 3 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none">
+                    <h3 class="font-bold text-slate-900 text-sm">Execução por Ação Orçamentária (Empenhado vs. Reservado vs. Livre)</h3>
+                    <p class="text-xs text-slate-500 mb-3">Comparativo direto de fôlego financeiro por programa da Saúde</p>
+                    <div class="h-64"><canvas id="chartFontes"></canvas></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none">
+                    <h3 class="font-bold text-slate-900 text-sm">Funil Financeiro Global de 2026 (R$ 97,04 Milhões)</h3>
+                    <p class="text-xs text-slate-500 mb-3">Clique nas fatias ou nos cards acima para abrir os empenhos de cada etapa</p>
+                    <div class="h-64 flex justify-center"><canvas id="chartBlocos"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Tabela Executiva com Popover -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden print-shadow-none">
+                <div class="px-5 py-3.5 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 bg-slate-50">
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800">Quadro Sintético das Dotações Reais (Refs)</h3>
+                        <p class="text-xs text-slate-500">💡 <strong>Passe o mouse sobre o botão azul <code>Ref. XX</code></strong> para abrir a caixinha explicando do que é a dotação, vínculo e o que pode pagar nela.</p>
+                    </div>
+                    <span class="text-xs font-semibold text-emerald-700" id="contadorRefsTabela">Exibindo 209 dotações</span>
+                </div>
+                <div class="overflow-x-auto max-h-[480px]">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-white uppercase font-bold sticky top-0 z-20">
+                            <tr>
+                                <th class="py-3 px-3">Dotação (Passe o Mouse)</th>
+                                <th class="py-3 px-3">Ação / Programa</th>
+                                <th class="py-3 px-3">Vínculo (Fonte de Recurso)</th>
+                                <th class="py-3 px-3">Permissões de Uso</th>
+                                <th class="py-3 px-3 text-right">Atualizado</th>
+                                <th class="py-3 px-3 text-right">Empenhado</th>
+                                <th class="py-3 px-3 text-right">Reservado</th>
+                                <th class="py-3 px-3 text-right">Saldo Livre Real</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaResumoExecutivo" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: ONDE POSSO GASTAR? -->
+        <section id="aba-dotacoes" class="tab-content space-y-6">
+            <div class="bg-white p-5 rounded-xl border-2 border-blue-600/30 shadow-md space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <span class="text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Motor de Busca Reversa por Permissão</span>
+                        <h3 class="font-extrabold text-base text-slate-900 mt-1">Precisa pagar ou comprar algo? Pesquise pela sua necessidade:</h3>
+                        <p class="text-xs text-slate-500">Digite ex: <em>transporte, tfd, samu, aluguel, tecnologia, hospital, apae, amai, medicamento, bucal, veículo, obra, consórcio</em> ou clique nos filtros rápidos abaixo.</p>
+                    </div>
+                    <button onclick="limparBuscaPermissao()" class="text-xs text-blue-600 hover:underline font-semibold no-print">Limpar e mostrar todas</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 no-print">
+                    <div class="md:col-span-3 relative">
+                        <input type="text" id="inputBuscaNecessidade" oninput="filtrarAbaDotacoes()" 
+                            placeholder="Ex: Digite 'transporte', 'aluguel', 'tecnologia', 'samu', 'bucal', 'Julia Zanatta', '91'..." 
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none">
+                        <i data-lucide="search" class="w-5 h-5 text-blue-600 absolute left-3 top-2.5"></i>
+                    </div>
+                    <div>
+                        <select id="selectApenasComSaldo" onchange="filtrarAbaDotacoes()" class="w-full h-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700">
+                            <option value="COM_SALDO">🟢 Apenas com Saldo Livre (&gt; R$ 100)</option>
+                            <option value="TODAS">Mostrar Todas (Inclusive Zeradas)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 pt-1 no-print" id="containerChipsPermissao">
+                    <button onclick="selecionarChipPermissao('TODOS', this)" class="chip-permissao active text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-slate-100 text-slate-700">Todas</button>
+                    <button onclick="selecionarChipPermissao('Transporte / TFD / SAMU', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🚌 Transporte / TFD / SAMU</button>
+                    <button onclick="selecionarChipPermissao('Custeio / Aluguel / Serviços PJ', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🏢 Custeio / Aluguel / Serviços (33390)</button>
+                    <button onclick="selecionarChipPermissao('Tecnologia / SUS Digital', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">💻 Tecnologia / SUS Digital (2121)</button>
+                    <button onclick="selecionarChipPermissao('Hospital / Entidades (33350)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🏥 Hospital / APAE / AMAI (33350)</button>
+                    <button onclick="selecionarChipPermissao('Consórcio Público (33371)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🤝 Consórcio CISAMUREL (33371)</button>
+                    <button onclick="selecionarChipPermissao('Medicamentos / Farmácia', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">💊 Farmácia & Insumos (2089/2090)</button>
+                    <button onclick="selecionarChipPermissao('Saúde Bucal', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🦷 Saúde Bucal (2076)</button>
+                    <button onclick="selecionarChipPermissao('Material Permanente / Obras (34490)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">❄️ Permanente / Móveis / Veículos (34490)</button>
+                </div>
+
+                <div id="resumoBuscaNecessidade" class="hidden p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex flex-wrap items-center justify-between gap-2"></div>
+            </div>
+
+            <!-- Simulador Rápido -->
+            <div class="bg-slate-900 text-white p-5 rounded-xl shadow-md border border-slate-700 no-print">
+                <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="calculator" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="font-bold text-sm uppercase tracking-wider text-emerald-400">Simulador Rápido: "Cabe na Dotação?"</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs text-slate-300 mb-1">1. Escolha a Dotação (Ref.) apontada acima:</label>
+                        <select id="simuladorDotacaoSelect" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">2. Valor Estimado da Despesa (R$):</label>
+                        <input type="number" id="simuladorValorInput" placeholder="Ex: 25000" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <button onclick="simularCompra()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2 px-4 rounded-lg text-sm transition">
+                            Testar Viabilidade
+                        </button>
+                    </div>
+                </div>
+                <div id="resultadoSimulador" class="hidden mt-4 p-3 rounded-lg text-xs font-medium"></div>
+            </div>
+
+            <div id="listaCardsDotacoes" class="grid grid-cols-1 gap-4"></div>
+        </section>
+
+        <!-- ABA 3: PAINEL DE EMENDAS LIVRES -->
+        <section id="aba-emendas" class="tab-content space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="text-[11px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">Mapeamento Completo de Emendas</span>
+                        <h3 class="font-extrabold text-base text-slate-900 mt-1">Emendas Parlamentares (União, Estado e Municipais) — R$ 5.297.628,27 Livres em 73 Refs</h3>
+                        <p class="text-xs text-slate-500">Passe o mouse sobre a <code>Ref.</code> para ver a regra completa da dotação. Filtre por esfera ou pesquise abaixo:</p>
+                    </div>
+                    <div class="flex items-center gap-2 no-print">
+                        <input type="text" id="inputBuscaEmenda" oninput="renderizarEmendas()" placeholder="Buscar deputado, vínculo, Ref..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs bg-slate-50">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-white uppercase font-bold">
+                            <tr>
+                                <th class="py-3 px-3">Ref. (Passe o Mouse)</th>
+                                <th class="py-3 px-3">Vínculo / Parlamentar / Emenda</th>
+                                <th class="py-3 px-3">Ação Onde Está Alocada</th>
+                                <th class="py-3 px-3">Permissão (Modalidade)</th>
+                                <th class="py-3 px-3 text-right">Valor Atualizado</th>
+                                <th class="py-3 px-3 text-right">Empenhado</th>
+                                <th class="py-3 px-3 text-right">Reservado</th>
+                                <th class="py-3 px-3 text-right">Saldo Livre Parado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEmendasBody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 4: CONTRATOS FIXOS E FILA DA TESOURARIA -->
+        <section id="aba-fixos" class="tab-content space-y-6">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-600 uppercase">Visão da Tela:</span>
+                    <button onclick="filtrarContratos('TODOS')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white">Todos os Contratos Cruzados</button>
+                    <button onclick="filtrarContratos('COBRAR_FISCAL')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">🚨 Pendentes c/ Fiscal (Cobrar NF)</button>
+                    <button onclick="filtrarContratos('NA_TESOURARIA')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-900 hover:bg-blue-200">🏦 Na Tesouraria (Já Liquidados: R$ 648,3 mil)</button>
+                    <button onclick="filtrarContratos('VENCENDO')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-100 text-rose-900 hover:bg-rose-200">⏰ Contratos Vencendo (&lt; 45 dias)</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden print-shadow-none">
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-slate-800">Contratos Ativos FMS Imbituba x Empenhos Abertos x Liquidação e Tesouraria</h3>
+                    <span class="text-xs text-slate-500">Passe o mouse na Ref. para ver os detalhes da dotação</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-white uppercase font-bold">
+                            <tr>
+                                <th class="py-3 px-3">Contrato & Espécie</th>
+                                <th class="py-3 px-3">Fornecedor & Objeto</th>
+                                <th class="py-3 px-3">Vigência Final</th>
+                                <th class="py-3 px-3">Refs & Empenho</th>
+                                <th class="py-3 px-3 text-right">Saldo a Liquidar / Pagar</th>
+                                <th class="py-3 px-3">Últ. Liq / Pagto</th>
+                                <th class="py-3 px-3">Diagnóstico Automático</th>
+                                <th class="py-3 px-3 text-right no-print">Cobrar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaFixosBody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 5: AUDITORIA DE EMPENHOS PARADOS -->
+        <section id="aba-auditoria" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-xl border-2 border-rose-500/40 shadow-lg space-y-5">
+                <div class="flex flex-wrap justify-between items-start gap-4">
+                    <div class="max-w-2xl">
+                        <span class="text-[11px] font-extrabold uppercase tracking-wider bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full">Auditoria de Restos a Pagar & Alívio de Dotações</span>
+                        <h3 class="font-extrabold text-lg text-slate-900 mt-1">Auditoria Completa dos 109 Empenhos Parados há +60 Dias (R$ 854.939,42 Bloqueados)</h3>
+                        <p class="text-xs text-slate-600 mt-1">
+                            Quando um empenho fica meses sem liquidação, ele congela o Saldo Livre da dotação. Abaixo você vê <strong>todos os 109 empenhos reais com o número do empenho, a empresa, o valor empenhado, o valor exato a ser liberado</strong> e a recomendação.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-slate-900 text-white p-3.5 rounded-xl border border-slate-700 space-y-2 no-print min-w-[320px]">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-400">Auditar Dotação Específica ou Todas:</label>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <input type="text" id="inputBuscaRefAuditoria" 
+                                    oninput="sincronizarInputAuditoria(this.value)" 
+                                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); renderizarAuditoria(); }"
+                                    placeholder="Digite a Ref (ex: 91, 71)..." 
+                                    class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-8 pr-2 py-1.5 text-xs font-bold text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                                <i data-lucide="hash" class="w-3.5 h-3.5 text-emerald-400 absolute left-2.5 top-2"></i>
+                            </div>
+                            <button onclick="limparFiltroAuditoria()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition">
+                                Ver Todas
+                            </button>
+                        </div>
+                        <select id="filtroRefAuditoriaSelect" onchange="selecionarDropdownAuditoria(this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200 cursor-pointer">
+                            <option value="">📋 Lista com todas as Dotações Auditadas (109 empenhos)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-rose-800 uppercase">Valor a Ser Liberado no Filtro</span>
+                        <h4 class="text-2xl font-extrabold text-rose-900 mt-1" id="kpiAuditoriaValor">R$ 854.939,42</h4>
+                        <p class="text-xs text-rose-700 mt-1" id="kpiAuditoriaSubValor">Soma do saldo preso nos empenhos listados abaixo</p>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-amber-800 uppercase">Nunca Liquidados (R$ 0,00 pago)</span>
+                        <h4 class="text-2xl font-extrabold text-amber-900 mt-1" id="kpiAuditoriaNunca">75 empenhos</h4>
+                        <p class="text-xs text-amber-700 mt-1">Fornecedor nunca entregou ou compra desistiu (Estornar!)</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+                        <span class="text-[11px] font-bold text-blue-800 uppercase">Parcialmente Liquidados (Travados)</span>
+                        <h4 class="text-2xl font-extrabold text-blue-900 mt-1" id="kpiAuditoriaParcial">34 empenhos</h4>
+                        <p class="text-xs text-blue-700 mt-1">Sobra de empenho global antigo ou NF esquecida pelo fiscal</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-white uppercase font-bold">
+                            <tr>
+                                <th class="py-3 px-3">Nº Empenho & Espécie</th>
+                                <th class="py-3 px-3">Dotação (Passe o Mouse)</th>
+                                <th class="py-3 px-3">Empresa / Credor</th>
+                                <th class="py-3 px-3">Emissão & Últ. Liq.</th>
+                                <th class="py-3 px-3 text-right">Valor Empenhado</th>
+                                <th class="py-3 px-3 text-right">Valor a Ser Liberado</th>
+                                <th class="py-3 px-3">Explicação & Ação Recomendada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaAuditoriaBody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 6: SINCRONIZADOR QUINZENAL IPM -->
+        <section id="aba-importacao" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">Sincronizador Automático de Relatórios do IPM Atende.net</h3>
+                    <p class="text-xs text-slate-500 mt-1">Arraste ou selecione os arquivos exportados do IPM para atualizar todas as 209 dotações, os empenhos a liquidar e os contratos ativos:</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="border-2 border-dashed border-purple-300 hover:border-purple-600 rounded-xl p-5 text-center cursor-pointer bg-purple-50/30 transition">
+                        <input type="file" accept=".csv" class="hidden" onchange="processarCSVSaldoDotacaoReal(this)">
+                        <i data-lucide="database" class="w-8 h-8 text-purple-600 mx-auto mb-2"></i>
+                        <div class="font-bold text-sm text-slate-800">1. Saldo Dotacao.csv</div>
+                        <p class="text-xs text-slate-500 mt-1">Atualiza as 209 Refs e Saldos p/ Reserva</p>
+                    </label>
+                    <label class="border-2 border-dashed border-rose-300 hover:border-rose-600 rounded-xl p-5 text-center cursor-pointer bg-rose-50/30 transition">
+                        <input type="file" accept=".csv" class="hidden" onchange="processarCSVEmpenhosLiquidarReal(this)">
+                        <i data-lucide="alert-octagon" class="w-8 h-8 text-rose-600 mx-auto mb-2"></i>
+                        <div class="font-bold text-sm text-slate-800">2. Empenhos Liquidar.csv</div>
+                        <p class="text-xs text-slate-500 mt-1">Atualiza os empenhos abertos na Auditoria</p>
+                    </label>
+                    <label class="border-2 border-dashed border-emerald-300 hover:border-emerald-600 rounded-xl p-5 text-center cursor-pointer bg-emerald-50/30 transition">
+                        <input type="file" accept=".json" class="hidden" onchange="processarJSONContratosReal(this)">
+                        <i data-lucide="file-json" class="w-8 h-8 text-emerald-600 mx-auto mb-2"></i>
+                        <div class="font-bold text-sm text-slate-800">3. Relatorio (3).json</div>
+                        <p class="text-xs text-slate-500 mt-1">Atualiza Contratos Ativos e Vigências</p>
+                    </label>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
+                    <div class="text-xs text-slate-600">
+                        <strong>Como os dados semanais ficam salvos?</strong> Ao soltar um arquivo acima, ele grava <strong>automaticamente no Banco do Navegador (LocalStorage)</strong> e no <strong>Supabase</strong> (se configurado). Se quiser atualizar também o arquivo físico do seu GitHub, clique no botão ao lado:
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="baixarArquivoDadosIniciaisAtualizado()" class="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-slate-700 px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+                            <i data-lucide="download" class="w-4 h-4"></i> Baixar "dados_iniciais.js" Atualizado
+                        </button>
+                        <button onclick="limparCacheNavegadorVoltarOriginal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3 py-2 rounded-lg text-xs font-semibold transition">
+                            Restaurar Padrão da Pasta
+                        </button>
+                    </div>
+                </div>
+                <div id="logImportacao" class="bg-slate-900 text-emerald-400 font-mono text-xs p-4 rounded-xl space-y-1">
+                    <div>[SISTEMA PRONTO] Persistência Tripla Ativa: 1º Supabase (Nuvem) -> 2º LocalStorage (Navegador) -> 3º js/dados_iniciais.js (Pasta).</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Módulo Principal ES6 -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
