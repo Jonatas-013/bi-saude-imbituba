@@ -311,11 +311,20 @@ function renderizarEmendas() {
         };
     });
 
-    const listaFiltrada = Object.values(agrupadas).filter(g => {
+    
+    const ordenacao = document.getElementById('selectOrdenacaoEmendas') ? document.getElementById('selectOrdenacaoEmendas').value : 'SALDO_DESC';
+    let listaFiltrada = Object.values(agrupadas).filter(g => {
         if (!busca) return true;
-        const txtGrupo = normalizarTexto(`${g.vinculo} ${Array.from(g.tagsGlobais).join(' ')} ${g.refs.map(r => r.regraPode + ' ' + r.regraNaoPode + ' ' + r.ref).join(' ')}`);
+        const txtGrupo = normalizarTexto(`${g.vinculo} ${Array.from(g.tagsGlobais).join(' ')} ${g.refs.map(r => (r.regraPode||'') + ' ' + (r.regraNaoPode||'') + ' ' + r.ref + ' ' + (r.tagsBusca||'')).join(' ')}`);
         return txtGrupo.includes(busca);
-    }).sort((a, b) => b.totalLivre - a.totalLivre);
+    });
+    
+    if (ordenacao === 'ALFABETICA') {
+        listaFiltrada = listaFiltrada.sort((a, b) => a.vinculo.localeCompare(b.vinculo));
+    } else {
+        listaFiltrada = listaFiltrada.sort((a, b) => b.totalLivre - a.totalLivre);
+    }
+
 
     document.getElementById('containerEmendasAcordeon').innerHTML = listaFiltrada.map((grupo, idx) => {
         const idCollapse = `collapse-emenda-${idx}`;
