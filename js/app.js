@@ -480,4 +480,42 @@ async function salvarModalEdicao() {
     fecharModalEdicao();
 }
 
-Object.assign(window, { sincronizarFNSAutomatico, renderizarEmendas });
+
+Object.assign(window, {
+    trocarAba,
+    drillDownOrcamento,
+    drillDownTesouraria,
+    drillDownAuditoria,
+    drillDownEmendas,
+    atualizarGraficoMensal,
+    selecionarChipPermissao,
+    limparBuscaPermissao,
+    filtrarAbaDotacoes,
+    simularCompra,
+    renderizarEmendas,
+    filtrarContratos,
+    sincronizarInputAuditoria,
+    selecionarDropdownAuditoria,
+    limparFiltroAuditoria,
+    renderizarAuditoria,
+    processarCSVSaldoDotacaoReal,
+    processarCSVEmpenhosLiquidarReal,
+    processarJSONContratosReal,
+    baixarArquivoDadosIniciaisAtualizado,
+    limparCacheNavegadorVoltarOriginal,
+    gerarPDFRelatorio,
+    exportarCSVTelaAtual,
+    sincronizarFNSAutomatico,
+    abrirModalEdicao,
+    fecharModalEdicao,
+    salvarModalEdicao
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    inicializarBancoDeDados();
+    const filtroBloco = document.getElementById('filtroBlocoGlobal');
+    const filtroDotacao = document.getElementById('filtroDotacaoGlobal');
+    if (filtroBloco) filtroBloco.addEventListener('change', renderizarTudo);
+    if (filtroDotacao) filtroDotacao.addEventListener('change', renderizarTudo);
+});
+
