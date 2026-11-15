@@ -22,9 +22,13 @@ let auditoriaParadosDB = [];
 let contratosCruzadosDB = [];
 let customRulesDB = {};
 
-let chartEvolucaoInstance = null;
+let chartEmendasBIInstance = null;
+let chartCategoriasBIInstance = null;
 let chartFontesInstance = null;
 let chartBlocosInstance = null;
+
+let modoDetalheEmendasBI = false;
+let mostrarTodasCategoriasBI = false;
 let tagPermissaoAtiva = 'TODOS';
 let filtroSituacaoContratoAtivo = 'TODOS';
 
@@ -204,30 +208,30 @@ export const regrasPlanilhaPorRef = {
 // 3. BASE COMPLETA: 24 PROPOSTAS FEDERAIS DO FNS (EXTRAIDAS DO PDF)
 // =========================================================================
 export const propostasFNSReais = [
-    { ano: 2024, numero: "10568451000124001", emenda: "PROGRAMA PAC/MS", parlamentar: "MINISTÉRIO DA SAÚDE (PROGRAMA)", status: "FAVORÁVEL / EMPENHADO", objeto: "Construção de Unidade Básica de Saúde (UBS Porte 1 - Bairro Guaiúba)", valor: 2026110.00, natureza: "4490 - Obras e Instalações", pode: "Execução da obra civil de construção da nova UBS Porte 1 no bairro Guaiúba (atendimento estimado de 3.000 habitantes).", naoPode: "VEDADO usar para compra de medicamentos, folha de pagamento ou manutenção de outras UBSs." },
-    { ano: 2024, numero: "36000599811202400", emenda: "Emenda 44930003", parlamentar: "EMENDA FEDERAL Nº 44930003", status: "PROPOSTA APROVADA", objeto: "Incremento Temporário ao Custeio do Piso da Atenção Primária (PAP)", valor: 2000000.00, natureza: "3390 - Custeio APS", pode: "Custeio de ações e serviços da Atenção Primária à Saúde (material de consumo, gaze, gase, seringas, serviços PJ e manutenção das UBSs).", naoPode: "VEDADO usar para pagamento de servidores ativos/inativos, obras ou compra de equipamentos permanentes (4490)." },
-    { ano: 2024, numero: "36000604612202400", emenda: "Emenda 50410004", parlamentar: "EMENDA FEDERAL Nº 50410004", status: "PROPOSTA APROVADA", objeto: "Incremento Temporário ao Custeio do Piso da Atenção Primária (PAP)", valor: 1000000.00, natureza: "3390 - Custeio APS", pode: "Custeio operacional das Unidades Básicas de Saúde, insumos clínicos (gaze, gase, luvas, seringas) e serviços terceirizados da APS.", naoPode: "VEDADO usar para folha de pagamento de pessoal ou aquisição de material permanente/veículos." },
-    { ano: 2024, numero: "36000599812202400", emenda: "Emenda 90550006", parlamentar: "EMENDA FEDERAL Nº 90550006 (Gilson Marques - Ref. 513)", status: "PROPOSTA APROVADA", objeto: "Incremento Temporário ao Custeio MAC (Média e Alta Complexidade)", valor: 180000.00, natureza: "3390 / 3371 - Custeio MAC", pode: "Custeio de procedimentos, exames, insumos e combustível/logística de Média e Alta Complexidade (CNES 6442285 - SMS Imbituba).", naoPode: "VEDADO usar na Atenção Básica ou para compra de equipamentos permanentes (4490)." },
-    { ano: 2024, numero: "10568451000124002", emenda: "PROGRAMA SUS DIGITAL", parlamentar: "MINISTÉRIO DA SAÚDE (TELESSAÚDE)", status: "PROPOSTA APROVADA", objeto: "Equipamentos de Saúde Digital e Telessaúde para 6 UBSs (29 itens)", valor: 59704.00, natureza: "4490 - Material Permanente", pode: "Compra exata de 29 itens para as UBSs Ibiraquera, Alto Arroio, Campo d'Aviação, Nova Brasília, Vila Nova e Vila Nova Alvorada: 5 Notebooks (R$ 6.940 un), 6 Câmeras Videoconferência 4K (R$ 1.700 un), 1 Monitor Sinais Vitais Telessaúde (R$ 7.374), 11 Cadeiras (R$ 312 un) e 6 Mesas (R$ 737/313).", naoPode: "VEDADO comprar itens diferentes da relação aprovada ou alocar em unidades fora dos 6 CNES cadastrados." },
-    { ano: 2025, numero: "36000721655202500", emenda: "Emenda 39490003", parlamentar: "DEPUTADO DANIEL FREITAS (Emenda 39490003 - Refs. 518, 519, 520)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Material de Consumo, Apoio Logístico e Telessaúde APS", valor: 1000000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "100% Material de Consumo (R$ 1 Mi): elásticos, colchonetes, cronômetros, luvas, seringas, gazes, gase, impressão de cartilhas/materiais gráficos (PSE), combustível p/ transporte de pacientes da APS e pequenos acessórios de suporte digital classificados como custeio (cabos, microfones, webcams, fones, teclados, tripés).", naoPode: "VEDADO comprar bens de capital/permanentes (4490), pois 100% foi cadastrado na natureza Material de Consumo." },
-    { ano: 2025, numero: "36000664106202500", emenda: "Emenda 44010001", parlamentar: "DEPUTADA JULIA ZANATTA (Emenda 44010001 - Refs. 514, 515, 516)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Saúde da Mulher, Odontológico, Idoso, Vacinação e Telessaúde", valor: 1000000.00, natureza: "3390 - Custeio APS (Consumo e Serviços PJ)", pode: "Implantação de telessaúde/telepsicologia (R$ 120 mil - Ref 515); Insumos Saúde da Mulher e Material Odontológico (R$ 200 mil - Ref 514); Materiais leves elásticos, colchonetes, esfigmomanômetro, balança (R$ 50 mil - Ref 514); DIU/anticoncepcionais (R$ 50 mil); Linha de cuidado da pessoa idosa (R$ 100 mil); Busca ativa vacinal e campanhas (R$ 180 mil); Condições crônicas e navegação do cuidado (R$ 300 mil - Ref 516).", naoPode: "VEDADO usar para folha de pagamento, obras ou compra de veículos." },
-    { ano: 2025, numero: "36000655010202500", emenda: "Emenda 42510001", parlamentar: "EMENDA FEDERAL Nº 42510001", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Insumos Saúde da Mulher, Condições Crônicas e Navegação", valor: 300000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "100% Material de Consumo: R$ 100 mil para insumos de atendimento clínico à Saúde da Mulher (gaze, gase, seringa, luva); R$ 100 mil para insumos de acompanhamento de condições crônicas (tiras de glicemia, lancetas); R$ 100 mil para fortalecimento da APS.", naoPode: "VEDADO usar para serviços de terceiros PJ ou equipamentos permanentes (100% vinculado a Material de Consumo)." },
-    { ano: 2025, numero: "36000718685202500", emenda: "Emenda 50410001", parlamentar: "COMISSÃO DE SAÚDE (Emenda 50410001 - Proposta 1)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Atenção Integral à Saúde da Mulher", valor: 200000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "Aquisição de insumos ginecológicos e de atendimento à mulher: espéculos vaginais, pinças, luvas de procedimento, gazes, gase, algodão, seringas, agulhas, cartilhas e folders educativos de combate à violência e dignidade menstrual.", naoPode: "VEDADO usar para serviços PJ, obras ou equipamentos permanentes." },
-    { ano: 2025, numero: "36000706895202500", emenda: "Emenda 50410001", parlamentar: "COMISSÃO DE SAÚDE (Emenda 50410001 - Proposta 2 - Ref. 512 CEREM)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Saúde da Mulher e Contraceptivos (CEREM)", valor: 250000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "Aquisição de espéculos, pinças, luvas, gazes, gase, algodão, seringas, agulhas, pílulas anticoncepcionais, injetáveis mensais, Dispositivo Intrauterino (DIU), diafragma, Implanon e materiais educativos de saúde da mulher no CEREM.", naoPode: "VEDADO usar para contratação de serviços PJ ou compra de mobiliário/equipamentos." },
-    { ano: 2025, numero: "36000699808202500", emenda: "Emenda 60060003", parlamentar: "COMISSÃO DE ASSUNTOS SOCIAIS (Emenda 60060003 - Ref. 777)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Rastreamento de Condições Crônicas via Consórcio", valor: 500000.00, natureza: "3371 - Execução Delegada a Consórcios Públicos (100%)", pode: "Transferência a Consórcio Público (CISAMUREL) para oferta de exames e consultas especializadas de rastreamento e controle de Doenças Crônicas para pacientes da Atenção Básica.", naoPode: "VEDADO usar fora de contrato de rateio com Consórcio Público ou para compra de equipamentos." },
-    { ano: 2025, numero: "36000699824202500", emenda: "Emenda 71260002", parlamentar: "BANCADA OBRIGATÓRIA SC (Emenda 71260002 - Ref. 510)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Serviços de Tecnologia da Informação (IPM/Inovadora)", valor: 222386.00, natureza: "3390.40 - Serviços de TIC Pessoa Jurídica (100%)", pode: "Manutenção da informatização das UBSs: locação/licenciamento de sistemas de prontuário eletrônico (IPM / Inovadora), teleatendimento e conectividade da Atenção Primária.", naoPode: "VEDADO comprar computadores/hardware (4490) ou materiais de consumo; exclusivo para Serviços de TIC PJ." },
-    { ano: 2025, numero: "10568451000125002", emenda: "PROGRAMA EQUIPAMENTOS", parlamentar: "MINISTÉRIO DA SAÚDE (UBS CENTRO)", status: "PROPOSTA APROVADA", objeto: "Aquisição de 18 Equipamentos Médicos e de Telessaúde para a UBS Centro", valor: 199596.00, natureza: "4490 - Material Permanente", pode: "Compra exata dos 18 equipamentos para a USF Centro (CNES 2385902): 1 Retinógrafo (R$ 43.222), 1 Ultrassom Portátil (R$ 41.933), 1 Espirômetro (R$ 19.866), 1 Câmara Imunobiológicos (R$ 16.176), 1 Eletrocardiógrafo (R$ 15.390), 1 Bisturi Elétrico (R$ 13.779), 1 DEA (R$ 9.930), 1 Dermatoscópio (R$ 8.010), 1 Fotóforo (R$ 7.316), 1 Otoscópio (R$ 7.250), 1 Laser Fisio (R$ 4.214), 1 Doppler (R$ 2.421), 1 Cadeira Rodas Obeso (R$ 2.346), 1 Ultrassom Fisio (R$ 2.053), 1 Balança (R$ 1.888), 1 Dinamômetro (R$ 1.832), 1 TENS/FES (R$ 1.757) e 1 Tábua Propriocepção (R$ 213).", naoPode: "VEDADO usar para custeio ou comprar equipamentos diferentes da lista técnica aprovada." },
-    { ano: 2025, numero: "10568451000125001", emenda: "PROGRAMA TELESSAÚDE", parlamentar: "MINISTÉRIO DA SAÚDE (EAP PENHA)", status: "PROPOSTA APROVADA", objeto: "Equipamentos para Teleconsulta na EAP da Penha (3 itens)", valor: 7158.00, natureza: "4490 - Material Permanente", pode: "Compra exata de 3 itens para a EAP da Penha (CNES 2385945): 1 Notebook para Telessaúde (R$ 4.068,00), 1 Televisor 42\" a 50\" (R$ 1.726,00) e 1 Câmera de Videoconferência 4K (R$ 1.364,00).", naoPode: "VEDADO usar em outra unidade ou para despesas de custeio." },
-    { ano: 2026, numero: "36000764089202600", emenda: "Emenda 44010001", parlamentar: "DEPUTADA JULIA ZANATTA (Emenda 44010001 - Refs. 536 e 537)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Saúde da Pessoa Idosa e Manutenção Equipamentos CEREM/UBS", valor: 400000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "R$ 200.000,00 (Ref 536) para ações de atenção ao envelhecimento e saúde da pessoa idosa na APS; R$ 200.000,00 (Ref 537) para manutenção preventiva e corretiva de equipamentos nas UBSs e no CEREM.", naoPode: "VEDADO adquirir equipamentos novos (4490) ou folha de pagamento; exclusivo para Serviços PJ." },
-    { ano: 2026, numero: "36000764161202600", emenda: "Emenda 42090006", parlamentar: "DEPUTADO JORGE GOETTEN (Emenda 42090006 - Ref. 538)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Manutenção de UBSs e Equipamentos (Vacinação)", valor: 350000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "Manutenção preventiva e corretiva das Unidades Básicas de Saúde: manutenção de equipamentos, reparo de refrigeradores de vacinas (cadeia de frio), sistemas elétricos e conservação de espaços clínicos.", naoPode: "VEDADO comprar câmaras frias novas ou construir ampliações (exclusivo para serviços PJ de manutenção)." },
-    { ano: 2026, numero: "36000763955202600", emenda: "Emenda 39320002", parlamentar: "DEPUTADA CAROLINE DE TONI (Emenda 39320002 - Refs. 534 e 535)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Combustível Visitas Domiciliares e Manut. Equip. Odontológico", valor: 350000.00, natureza: "3390 - Custeio APS", pode: "R$ 150.000,00 (Ref 534) para combustível, manutenção de veículos e kits de visitas domiciliares; R$ 200.000,00 (Ref 535) para manutenção preventiva/corretiva de equipamentos de UBS (foco em manutenção de equipamento odontológico e TI).", naoPode: "VEDADO comprar veículos ou equipamentos novos." },
-    { ano: 2026, numero: "36000760344202600", emenda: "Emenda 39290002", parlamentar: "EMENDA FEDERAL Nº 39290002", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Manutenção Predial UBSs, Equipamentos e Logística", valor: 1000000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "R$ 600.000,00 para manutenção predial preventiva/corretiva das UBSs (elétrica, salas de vacina, climatização); R$ 300.000,00 para manutenção de equipamentos clínicos (ECG, balanças, esfigmos); R$ 100.000,00 para apoio logístico de visitas domiciliares.", naoPode: "VEDADO usar para folha de pagamento ou compra de bens permanentes (100% Serviços PJ)." },
-    { ano: 2026, numero: "36000793046202600", emenda: "Emenda 71260002", parlamentar: "BANCADA OBRIGATÓRIA SC (Emenda 71260002 - Refs. 545, 546, 778, 779)", status: "PLANO DE TRABALHO APROVADO", objeto: "Incremento PAP — Consórcio, Insumos Mulher, Impressos e Pesquisa APS", valor: 500000.00, natureza: "Consórcio (R$ 200k) + Consumo (R$ 200k) + Auxílio Estudante (R$ 100k)", pode: "Divisão estrita: R$ 200.000,00 (Refs 778 e 779) para Consórcio Público; R$ 100.000,00 (Ref 545) para materiais/insumos Saúde da Mulher (gaze, gase, seringa, luva); R$ 100.000,00 (Ref 546) para materiais impressos educativos; R$ 100.000,00 (Ref 546) para Auxílio Financeiro a Estudantes.", naoPode: "VEDADO alterar os tetos de cada uma das naturezas cadastradas no plano de trabalho." },
-    { ano: 2026, numero: "10568451000126005", emenda: "Emenda 44010004", parlamentar: "EMENDA FEDERAL Nº 44010004", status: "PROPOSTA APROVADA", objeto: "Aquisição de 1 Unidade Móvel de Saúde (Ambulância Tipo A - Furgão)", valor: 312730.00, natureza: "4490 - Material Permanente", pode: "Aquisição de 1 Ambulância Tipo A - Simples Remoção Tipo Furgão 0km (diesel, mín. 7m³, maca retrátil, cilindro O2 16L, ar-condicionado 25.000 BTUs e sinalizador acústico/visual).", naoPode: "VEDADO comprar veículo de passeio comum ou usar o saldo para combustível/manutenção." },
-    { ano: 2026, numero: "63000763762202600", emenda: "PROGRAMA PAP 2026", parlamentar: "MINISTÉRIO DA SAÚDE (CUSTEIO PAP)", status: "PLANO DE TRABALHO APROVADO", objeto: "Custeio de Serviços da Atenção Primária à Saúde (Horário Estendido e Multiprofissional)", valor: 3000000.00, natureza: "Múltiplas Naturezas de Custeio (R$ 3,00 Mi)", pode: "Divisão por natureza: R$ 1.100.000,00 em Serviços PJ; R$ 700.000,00 em Serviços Pessoa Física; R$ 500.000,00 em Serviços de TIC PJ; R$ 300.000,00 em Material de Consumo (gaze, gase, seringas, insumos); R$ 300.000,00 em Auxílio a Estudantes; R$ 100.000,00 em Material de Distribuição Gratuita.", naoPode: "VEDADO usar para investimentos/obras (4490) ou ultrapassar o teto de cada natureza de despesa cadastrada." },
-    { ano: 2026, numero: "63000780331202600", emenda: "PROGRAMA MAC 2026 (1)", parlamentar: "MINISTÉRIO DA SAÚDE (MAC - APAE E AMAI)", status: "PLANO DE TRABALHO APROVADO", objeto: "Custeio MAC e Rede Alyne — Parceria APAE (R$ 500k) e AMAI (R$ 500k)", valor: 1000000.00, natureza: "3350 - Transferências / Contrato de Gestão", pode: "Repasse de R$ 500.000,00 para a APAE (seguimento de RN de risco e deficiência intelectual) e R$ 500.000,00 para a AMAI (diagnóstico precoce e acompanhamento multiprofissional de TEA).", naoPode: "VEDADO usar para obras civis ou compra de veículos nas entidades." },
-    { ano: 2026, numero: "63000764214202600", emenda: "PROGRAMA MAC 2026 (2)", parlamentar: "MINISTÉRIO DA SAÚDE (MAC - AMAI E APAE)", status: "PLANO DE TRABALHO APROVADO", objeto: "Custeio Especializado MAC / Rede Alyne — AMAI (R$ 500k) e APAE (R$ 500k)", valor: 1000000.00, natureza: "3350 - Transferências / Contrato de Gestão", pode: "Repasse de R$ 500.000,00 para a AMAI e R$ 500.000,00 para a APAE para custeio de equipe multiprofissional e reabilitação da Pessoa com Deficiência e RN de risco.", naoPode: "VEDADO desviar para despesas fora dos planos de trabalho aprovados para AMAI e APAE." },
-    { ano: 2026, numero: "63000763733202600", emenda: "PROGRAMA MAC 2026 (3)", parlamentar: "MINISTÉRIO DA SAÚDE (MAC - SMS IMBITUBA)", status: "PLANO DE TRABALHO APROVADO", objeto: "Custeio MAC — Regulação, Oncologia/TFD, Medicina Nuclear e Rede Alyne", valor: 1500000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "100% Serviços PJ: R$ 400 mil Alta Complexidade; R$ 350 mil Central de Regulação; R$ 200 mil Radioterapia TFD; R$ 200 mil Transporte Sanitário Radioterapia; R$ 150 mil Medicina Nuclear Oncológica; R$ 100 mil Pré-Natal Alto Risco; R$ 100 mil Seguimento RN de Risco.", naoPode: "VEDADO comprar equipamentos permanentes (4490) ou folha de efetivos." }
+    { ano: 2024, numero: "10568451000124001", emenda: "PROGRAMA PAC/MS", parlamentar: "MINISTÉRIO DA SAÚDE (PROGRAMA PAC)", status: "FAVORÁVEL / EMPENHADO", jaNoIPM: false, objeto: "Construção de Unidade Básica de Saúde (UBS Porte 1 - Bairro Guaiúba)", valor: 2026110.00, natureza: "4490 - Obras e Instalações", pode: "Execução da obra civil de construção da nova UBS Porte 1 no bairro Guaiúba (atendimento estimado de 3.000 habitantes).", naoPode: "VEDADO usar para compra de medicamentos, folha de pagamento ou manutenção de outras UBSs." },
+    { ano: 2024, numero: "36000599811202400", emenda: "Emenda 44930003", parlamentar: "EMENDA FEDERAL Nº 44930003", status: "PROPOSTA APROVADA", jaNoIPM: false, objeto: "Incremento Temporário ao Custeio do Piso da Atenção Primária (PAP)", valor: 2000000.00, natureza: "3390 - Custeio APS", pode: "Custeio de ações e serviços da Atenção Primária à Saúde (material de consumo, gaze, gase, seringas, serviços PJ e manutenção das UBSs).", naoPode: "VEDADO usar para pagamento de servidores ativos/inativos, obras ou compra de equipamentos permanentes (4490)." },
+    { ano: 2024, numero: "36000604612202400", emenda: "Emenda 50410004", parlamentar: "EMENDA FEDERAL Nº 50410004", status: "PROPOSTA APROVADA", jaNoIPM: false, objeto: "Incremento Temporário ao Custeio do Piso da Atenção Primária (PAP)", valor: 1000000.00, natureza: "3390 - Custeio APS", pode: "Custeio operacional das Unidades Básicas de Saúde, insumos clínicos (gaze, gase, luvas, seringas) e serviços terceirizados da APS.", naoPode: "VEDADO usar para folha de pagamento de pessoal ou aquisição de material permanente/veículos." },
+    { ano: 2024, numero: "36000599812202400", emenda: "Emenda 90550006", parlamentar: "DEPUTADO GILSON MARQUES (Ref. 513)", status: "PROPOSTA APROVADA", jaNoIPM: true, objeto: "Incremento Temporário ao Custeio MAC (Média e Alta Complexidade)", valor: 180000.00, natureza: "3390 / 3371 - Custeio MAC", pode: "Custeio de procedimentos, exames, insumos e combustível/logística de Média e Alta Complexidade (CNES 6442285 - SMS Imbituba).", naoPode: "VEDADO usar na Atenção Básica ou para compra de equipamentos permanentes (4490)." },
+    { ano: 2024, numero: "10568451000124002", emenda: "PROGRAMA SUS DIGITAL", parlamentar: "MINISTÉRIO DA SAÚDE (TELESSAÚDE)", status: "PROPOSTA APROVADA", jaNoIPM: false, objeto: "Equipamentos de Saúde Digital e Telessaúde para 6 UBSs (29 itens)", valor: 59704.00, natureza: "4490 - Material Permanente", pode: "Compra exata de 29 itens para as UBSs Ibiraquera, Alto Arroio, Campo d'Aviação, Nova Brasília, Vila Nova e Vila Nova Alvorada: 5 Notebooks (R$ 6.940 un), 6 Câmeras Videoconferência 4K (R$ 1.700 un), 1 Monitor Sinais Vitais Telessaúde (R$ 7.374), 11 Cadeiras (R$ 312 un) e 6 Mesas (R$ 737/313).", naoPode: "VEDADO comprar itens diferentes da relação aprovada ou alocar em unidades fora dos 6 CNES cadastrados." },
+    { ano: 2025, numero: "36000721655202500", emenda: "Emenda 39490003", parlamentar: "DEPUTADO DANIEL FREITAS (Refs. 518, 519, 520)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Material de Consumo, Apoio Logístico e Telessaúde APS", valor: 1000000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "100% Material de Consumo (R$ 1 Mi): elásticos, colchonetes, cronômetros, luvas, seringas, gazes, gase, impressão de cartilhas/materiais gráficos (PSE), combustível p/ transporte de pacientes da APS e pequenos acessórios de suporte digital classificados como custeio (cabos, microfones, webcams, fones, teclados, tripés).", naoPode: "VEDADO comprar bens de capital/permanentes (4490), pois 100% foi cadastrado na natureza Material de Consumo." },
+    { ano: 2025, numero: "36000664106202500", emenda: "Emenda 44010001", parlamentar: "DEPUTADA JULIA ZANATTA (Refs. 514, 515, 516)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Saúde da Mulher, Odontológico, Idoso, Vacinação e Telessaúde", valor: 1000000.00, natureza: "3390 - Custeio APS (Consumo e Serviços PJ)", pode: "Implantação de telessaúde/telepsicologia (R$ 120 mil - Ref 515); Insumos Saúde da Mulher e Material Odontológico (R$ 200 mil - Ref 514); Materiais leves elásticos, colchonetes, esfigmomanômetro, balança (R$ 50 mil - Ref 514); DIU/anticoncepcionais (R$ 50 mil); Linha de cuidado da pessoa idosa (R$ 100 mil); Busca ativa vacinal e campanhas (R$ 180 mil); Condições crônicas e navegação do cuidado (R$ 300 mil - Ref 516).", naoPode: "VEDADO usar para folha de pagamento, obras ou compra de veículos." },
+    { ano: 2025, numero: "36000655010202500", emenda: "Emenda 42510001", parlamentar: "EMENDA FEDERAL Nº 42510001", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Incremento PAP — Insumos Saúde da Mulher, Condições Crônicas e Navegação", valor: 300000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "100% Material de Consumo: R$ 100 mil para insumos de atendimento clínico à Saúde da Mulher (gaze, gase, seringa, luva); R$ 100 mil para insumos de acompanhamento de condições crônicas (tiras de glicemia, lancetas); R$ 100 mil para fortalecimento da APS.", naoPode: "VEDADO usar para serviços de terceiros PJ ou equipamentos permanentes (100% vinculado a Material de Consumo)." },
+    { ano: 2025, numero: "36000718685202500", emenda: "Emenda 50410001", parlamentar: "COMISSÃO DE SAÚDE (Proposta 1)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Incremento PAP — Atenção Integral à Saúde da Mulher", valor: 200000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "Aquisição de insumos ginecológicos e de atendimento à mulher: espéculos vaginais, pinças, luvas de procedimento, gazes, gase, algodão, seringas, agulhas, cartilhas e folders educativos de combate à violência e dignidade menstrual.", naoPode: "VEDADO usar para serviços PJ, obras ou equipamentos permanentes." },
+    { ano: 2025, numero: "36000706895202500", emenda: "Emenda 50410001", parlamentar: "COMISSÃO DE SAÚDE (Ref. 512 CEREM)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Saúde da Mulher e Contraceptivos (CEREM)", valor: 250000.00, natureza: "3390.30 - Material de Consumo (100%)", pode: "Aquisição de espéculos, pinças, luvas, gazes, gase, algodão, seringas, agulhas, pílulas anticoncepcionais, injetáveis mensais, Dispositivo Intrauterino (DIU), diafragma, Implanon e materiais educativos de saúde da mulher no CEREM.", naoPode: "VEDADO usar para contratação de serviços PJ ou compra de mobiliário/equipamentos." },
+    { ano: 2025, numero: "36000699808202500", emenda: "Emenda 60060003", parlamentar: "COMISSÃO DE ASSUNTOS SOCIAIS (Ref. 777)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Rastreamento de Condições Crônicas via Consórcio", valor: 500000.00, natureza: "3371 - Execução Delegada a Consórcios Públicos (100%)", pode: "Transferência a Consórcio Público (CISAMUREL) para oferta de exames e consultas especializadas de rastreamento e controle de Doenças Crônicas para pacientes da Atenção Básica.", naoPode: "VEDADO usar fora de contrato de rateio com Consórcio Público ou para compra de equipamentos." },
+    { ano: 2025, numero: "36000699824202500", emenda: "Emenda 71260002", parlamentar: "BANCADA OBRIGATÓRIA SC (Ref. 510)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Serviços de Tecnologia da Informação (IPM/Inovadora)", valor: 222386.00, natureza: "3390.40 - Serviços de TIC Pessoa Jurídica (100%)", pode: "Manutenção da informatização das UBSs: locação/licenciamento de sistemas de prontuário eletrônico (IPM / Inovadora), teleatendimento e conectividade da Atenção Primária.", naoPode: "VEDADO comprar computadores/hardware (4490) ou materiais de consumo; exclusivo para Serviços de TIC PJ." },
+    { ano: 2025, numero: "10568451000125002", emenda: "PROGRAMA EQUIPAMENTOS", parlamentar: "MINISTÉRIO DA SAÚDE (UBS CENTRO)", status: "PROPOSTA APROVADA", jaNoIPM: false, objeto: "Aquisição de 18 Equipamentos Médicos e de Telessaúde para a UBS Centro", valor: 199596.00, natureza: "4490 - Material Permanente", pode: "Compra exata dos 18 equipamentos para a USF Centro (CNES 2385902): 1 Retinógrafo (R$ 43.222), 1 Ultrassom Portátil (R$ 41.933), 1 Espirômetro (R$ 19.866), 1 Câmara Imunobiológicos (R$ 16.176), 1 Eletrocardiógrafo (R$ 15.390), 1 Bisturi Elétrico (R$ 13.779), 1 DEA (R$ 9.930), 1 Dermatoscópio (R$ 8.010), 1 Fotóforo (R$ 7.316), 1 Otoscópio (R$ 7.250), 1 Laser Fisio (R$ 4.214), 1 Doppler (R$ 2.421), 1 Cadeira Rodas Obeso (R$ 2.346), 1 Ultrassom Fisio (R$ 2.053), 1 Balança (R$ 1.888), 1 Dinamômetro (R$ 1.832), 1 TENS/FES (R$ 1.757) e 1 Tábua Propriocepção (R$ 213).", naoPode: "VEDADO usar para custeio ou comprar equipamentos diferentes da lista técnica aprovada." },
+    { ano: 2025, numero: "10568451000125001", emenda: "PROGRAMA TELESSAÚDE", parlamentar: "MINISTÉRIO DA SAÚDE (EAP PENHA)", status: "PROPOSTA APROVADA", jaNoIPM: false, objeto: "Equipamentos para Teleconsulta na EAP da Penha (3 itens)", valor: 7158.00, natureza: "4490 - Material Permanente", pode: "Compra exata de 3 itens para a EAP da Penha (CNES 2385945): 1 Notebook para Telessaúde (R$ 4.068,00), 1 Televisor 42\" a 50\" (R$ 1.726,00) e 1 Câmera de Videoconferência 4K (R$ 1.364,00).", naoPode: "VEDADO usar em outra unidade ou para despesas de custeio." },
+    { ano: 2026, numero: "36000764089202600", emenda: "Emenda 44010001", parlamentar: "DEPUTADA JULIA ZANATTA (Refs. 536 e 537)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Saúde da Pessoa Idosa e Manutenção Equipamentos CEREM/UBS", valor: 400000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "R$ 200.000,00 (Ref 536) para ações de atenção ao envelhecimento e saúde da pessoa idosa na APS; R$ 200.000,00 (Ref 537) para manutenção preventiva e corretiva de equipamentos nas UBSs e no CEREM.", naoPode: "VEDADO adquirir equipamentos novos (4490) ou folha de pagamento; exclusivo para Serviços PJ." },
+    { ano: 2026, numero: "36000764161202600", emenda: "Emenda 42090006", parlamentar: "DEPUTADO JORGE GOETTEN (Ref. 538)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Manutenção de UBSs e Equipamentos (Vacinação)", valor: 350000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "Manutenção preventiva e corretiva das Unidades Básicas de Saúde: manutenção de equipamentos, reparo de refrigeradores de vacinas (cadeia de frio), sistemas elétricos e conservação de espaços clínicos.", naoPode: "VEDADO comprar câmaras frias novas ou construir ampliações (exclusivo para serviços PJ de manutenção)." },
+    { ano: 2026, numero: "36000763955202600", emenda: "Emenda 39320002", parlamentar: "DEPUTADA CAROLINE DE TONI (Refs. 534 e 535)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Combustível Visitas Domiciliares e Manut. Equip. Odontológico", valor: 350000.00, natureza: "3390 - Custeio APS", pode: "R$ 150.000,00 (Ref 534) para combustível, manutenção de veículos e kits de visitas domiciliares; R$ 200.000,00 (Ref 535) para manutenção preventiva/corretiva de equipamentos de UBS (foco em manutenção de equipamento odontológico e TI).", naoPode: "VEDADO comprar veículos ou equipamentos novos." },
+    { ano: 2026, numero: "36000760344202600", emenda: "Emenda 39290002", parlamentar: "EMENDA FEDERAL Nº 39290002", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Incremento PAP — Manutenção Predial UBSs, Equipamentos e Logística", valor: 1000000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "R$ 600.000,00 para manutenção predial preventiva/corretiva das UBSs (elétrica, salas de vacina, climatização); R$ 300.000,00 para manutenção de equipamentos clínicos (ECG, balanças, esfigmos); R$ 100.000,00 para apoio logístico de visitas domiciliares.", naoPode: "VEDADO usar para folha de pagamento ou compra de bens permanentes (100% Serviços PJ)." },
+    { ano: 2026, numero: "36000793046202600", emenda: "Emenda 71260002", parlamentar: "BANCADA OBRIGATÓRIA SC (Refs. 545, 546, 778, 779)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: true, objeto: "Incremento PAP — Consórcio, Insumos Mulher, Impressos e Pesquisa APS", valor: 500000.00, natureza: "Consórcio (R$ 200k) + Consumo (R$ 200k) + Auxílio Estudante (R$ 100k)", pode: "Divisão estrita: R$ 200.000,00 (Refs 778 e 779) para Consórcio Público; R$ 100.000,00 (Ref 545) para materiais/insumos Saúde da Mulher (gaze, gase, seringa, luva); R$ 100.000,00 (Ref 546) para materiais impressos educativos; R$ 100.000,00 (Ref 546) para Auxílio Financeiro a Estudantes.", naoPode: "VEDADO alterar os tetos de cada uma das naturezas cadastradas no plano de trabalho." },
+    { ano: 2026, numero: "10568451000126005", emenda: "Emenda 44010004", parlamentar: "EMENDA FEDERAL Nº 44010004 (Ambulância)", status: "PROPOSTA APROVADA", jaNoIPM: false, objeto: "Aquisição de 1 Unidade Móvel de Saúde (Ambulância Tipo A - Furgão)", valor: 312730.00, natureza: "4490 - Material Permanente", pode: "Aquisição de 1 Ambulância Tipo A - Simples Remoção Tipo Furgão 0km (diesel, mín. 7m³, maca retrátil, cilindro O2 16L, ar-condicionado 25.000 BTUs e sinalizador acústico/visual).", naoPode: "VEDADO comprar veículo de passeio comum ou usar o saldo para combustível/manutenção." },
+    { ano: 2026, numero: "63000763762202600", emenda: "PROGRAMA PAP 2026", parlamentar: "MINISTÉRIO DA SAÚDE (CUSTEIO PAP)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Custeio de Serviços da Atenção Primária à Saúde (Horário Estendido e Multiprofissional)", valor: 3000000.00, natureza: "Múltiplas Naturezas de Custeio (R$ 3,00 Mi)", pode: "Divisão por natureza: R$ 1.100.000,00 em Serviços PJ; R$ 700.000,00 em Serviços Pessoa Física; R$ 500.000,00 em Serviços de TIC PJ; R$ 300.000,00 em Material de Consumo (gaze, gase, seringas, insumos); R$ 300.000,00 em Auxílio a Estudantes; R$ 100.000,00 em Material de Distribuição Gratuita.", naoPode: "VEDADO usar para investimentos/obras (4490) ou ultrapassar o teto de cada natureza de despesa cadastrada." },
+    { ano: 2026, numero: "63000780331202600", emenda: "PROGRAMA MAC 2026 (1)", parlamentar: "MINISTÉRIO DA SAÚDE (MAC - APAE E AMAI)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Custeio MAC e Rede Alyne — Parceria APAE (R$ 500k) e AMAI (R$ 500k)", valor: 1000000.00, natureza: "3350 - Transferências / Contrato de Gestão", pode: "Repasse de R$ 500.000,00 para a APAE (seguimento de RN de risco e deficiência intelectual) e R$ 500.000,00 para a AMAI (diagnóstico precoce e acompanhamento multiprofissional de TEA).", naoPode: "VEDADO usar para obras civis ou compra de veículos nas entidades." },
+    { ano: 2026, numero: "63000764214202600", emenda: "PROGRAMA MAC 2026 (2)", parlamentar: "MINISTÉRIO DA SAÚDE (MAC - AMAI E APAE)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Custeio Especializado MAC / Rede Alyne — AMAI (R$ 500k) e APAE (R$ 500k)", valor: 1000000.00, natureza: "3350 - Transferências / Contrato de Gestão", pode: "Repasse de R$ 500.000,00 para a AMAI e R$ 500.000,00 para a APAE para custeio de equipe multiprofissional e reabilitação da Pessoa com Deficiência e RN de risco.", naoPode: "VEDADO desviar para despesas fora dos planos de trabalho aprovados para AMAI e APAE." },
+    { ano: 2026, numero: "63000763733202600", emenda: "PROGRAMA MAC 2026 (3)", parlamentar: "MINISTÉRIO DA SAÚDE (MAC - SMS IMBITUBA)", status: "PLANO DE TRABALHO APROVADO", jaNoIPM: false, objeto: "Custeio MAC — Regulação, Oncologia/TFD, Medicina Nuclear e Rede Alyne", valor: 1500000.00, natureza: "3390.39 - Outros Serviços Terceiros PJ (100%)", pode: "100% Serviços PJ: R$ 400 mil Alta Complexidade; R$ 350 mil Central de Regulação; R$ 200 mil Radioterapia TFD; R$ 200 mil Transporte Sanitário Radioterapia; R$ 150 mil Medicina Nuclear Oncológica; R$ 100 mil Pré-Natal Alto Risco; R$ 100 mil Seguimento RN de Risco.", naoPode: "VEDADO comprar equipamentos permanentes (4490) ou folha de efetivos." }
 ];
 
 // =========================================================================
@@ -667,49 +671,347 @@ function drillDownEmendas() {
 }
 
 // =========================================================================
-// 6. ABA 1: VISAO EXECUTIVA, GRAFICOS E QUADRO SINTETICO
+// 6. ABA 1: NOVOS GRAFICOS ESTRATEGICOS (EMENDAS + CATEGORIAS + FONTES + FUNIL)
 // =========================================================================
-function atualizarGraficoMensal() {
-    const canvas = document.getElementById('chartEvolucaoMensal');
-    if (!canvas) return;
-    const elSim = document.getElementById('selectSimulacaoMensal');
-    const fator = parseFloat(elSim ? elSim.value : '1.0');
+function atualizarKPIsTopo(dotacoes) {
+    const somaAtualizado = dotacoes.reduce((a, b) => a + b.atualizado, 0);
+    const somaEmp = dotacoes.reduce((a, b) => a + b.empenhado, 0);
+    const somaEmendasLivres = dotacoes.filter(d => d.ehEmenda).reduce((a, b) => a + b.saldo_reserva, 0);
+    const somaParados = auditoriaParadosDB.reduce((a, b) => a + b.saldo, 0);
+
+    const kpiOrc = document.getElementById('kpiOrcadoAtual');
+    const kpiSub = document.getElementById('kpiSubOrcado');
+    const kpiEme = document.getElementById('kpiEmendasLivres');
+    const kpiPar = document.getElementById('kpiParadosTopo');
+
+    if (kpiOrc) kpiOrc.textContent = formatarBRL(somaAtualizado);
+    if (kpiSub) kpiSub.innerHTML = `Empenhado: <strong>${formatarBRL(somaEmp)}</strong> (Clique p/ abrir)`;
+    if (kpiEme) kpiEme.textContent = formatarBRL(somaEmendasLivres);
+    if (kpiPar) kpiPar.textContent = formatarBRL(somaParados);
+}
+
+// GRAFICO 1: EMENDAS PARLAMENTARES (ESFERAS VS. DETALHAMENTO POR AUTOR)
+function alternarVisaoGraficoEmendas() {
+    modoDetalheEmendasBI = !modoDetalheEmendasBI;
+    const btn = document.getElementById('btnAlternarVisaoEmendasBI');
+    if (btn) {
+        btn.innerHTML = modoDetalheEmendasBI
+            ? `<i data-lucide="minimize-2" class="w-3.5 h-3.5 text-amber-400"></i> Voltar p/ Resumo por Esfera (Vereadores / Estado / União)`
+            : `<i data-lucide="maximize-2" class="w-3.5 h-3.5 text-amber-400"></i> Ver Todas por Parlamentar / Autor`;
+    }
+    renderizarGraficoEmendasBI();
+    if (window.lucide) lucide.createIcons();
+}
+
+function renderizarGraficoEmendasBI() {
+    const canvas = document.getElementById('chartEmendasBI');
+    const wrapper = document.getElementById('wrapperGraficoEmendas');
+    const kpisBox = document.getElementById('kpisResumoEmendasGrafico');
+    if (!canvas || !wrapper) return;
+
+    const dotacoes = obterDotacoesFiltroGlobal();
+    const emendasAtivas = dotacoes.filter(d => d.ehEmenda);
+
+    const esferas = {
+        '🏛️ Vereadores (Impositivas Municipais)': { totalAtivo: 0, empenhado: 0, livre: 0, bloqueado: 0 },
+        '🚩 Estado SC (Emendas Estaduais / FES)': { totalAtivo: 0, empenhado: 0, livre: 0, bloqueado: 0 },
+        '🇧🇷 União (Deputados Federais / MS)': { totalAtivo: 0, empenhado: 0, livre: 0, bloqueado: 0 }
+    };
+
+    const porAutor = {};
+    function somarAutor(nome, ativo, emp, liv, bloq) {
+        if (!porAutor[nome]) porAutor[nome] = { totalAtivo: 0, empenhado: 0, livre: 0, bloqueado: 0 };
+        porAutor[nome].totalAtivo += ativo;
+        porAutor[nome].empenhado += emp;
+        porAutor[nome].livre += liv;
+        porAutor[nome].bloqueado += bloq;
+    }
+
+    emendasAtivas.forEach(d => {
+        const vCod = String(d.vinculo_cod);
+        let chaveEsfera = '🇧🇷 União (Deputados Federais / MS)';
+        let nomeAutor = d.tituloEmendaCustom ? d.tituloEmendaCustom : d.vinculo_desc;
+
+        if (vCod.startsWith('15007011') || vCod.startsWith('2500')) {
+            chaveEsfera = '🏛️ Vereadores (Impositivas Municipais)';
+            if (vCod.startsWith('150070112')) {
+                const num3 = vCod.slice(-3);
+                const imp = emendasImpositivas2025.find(x => x.num === num3);
+                if (imp) nomeAutor = `Ver. ${imp.autor}`;
+            } else if (vCod === '250070114501') nomeAutor = 'Ver. Michell Nunes (2024)';
+            else if (vCod === '250070114502') nomeAutor = 'Bancada PP (2024)';
+            else if (vCod === '250070114503') nomeAutor = 'Bancada PSDB (2024)';
+            else if (vCod === '250070114504') nomeAutor = 'Ver. Jesiel Antulino (2025)';
+            else nomeAutor = 'Emendas Municipais Consolidadas';
+        } else if (vCod.startsWith('2621') || vCod.startsWith('1621') || vCod.startsWith('2710') || vCod.startsWith('1701')) {
+            chaveEsfera = '🚩 Estado SC (Emendas Estaduais / FES)';
+            nomeAutor = vCod.includes('1368') ? 'Portaria 017/223 (Estado)' : 'Emendas Estaduais SC';
+        } else {
+            if (regrasPlanilhaPorRef[d.ref]) {
+                nomeAutor = regrasPlanilhaPorRef[d.ref].parlamentar.split('(')[0].trim();
+            } else {
+                nomeAutor = d.vinculo_desc.replace(/^\d+\s*-\s*/, '').replace('SUS União - Emenda Incremento Temporário - ', '').trim();
+            }
+        }
+
+        esferas[chaveEsfera].totalAtivo += d.atualizado;
+        esferas[chaveEsfera].empenhado += d.empenhado;
+        esferas[chaveEsfera].livre += d.saldo_reserva;
+        somarAutor(nomeAutor, d.atualizado, d.empenhado, d.saldo_reserva, 0);
+    });
+
+    emendasImpositivas2025.forEach(imp => {
+        const codEsperado = '150070112' + imp.num;
+        const existeNoIPM = dotacoesDB.some(d => String(d.vinculo_cod) === codEsperado);
+        if (!existeNoIPM) {
+            esferas['🏛️ Vereadores (Impositivas Municipais)'].bloqueado += imp.valor;
+            somarAutor(`Ver. ${imp.autor}`, 0, 0, 0, imp.valor);
+        }
+    });
+
+    propostasFNSReais.forEach(p => {
+        if (!p.jaNoIPM) {
+            esferas['🇧🇷 União (Deputados Federais / MS)'].bloqueado += p.valor;
+            somarAutor(`[FNS] ${p.parlamentar.slice(0, 28)}`, 0, 0, 0, p.valor);
+        }
+    });
+
+    const totAtivoGlobal = Object.values(esferas).reduce((a, b) => a + b.totalAtivo, 0);
+    const totEmpGlobal = Object.values(esferas).reduce((a, b) => a + b.empenhado, 0);
+    const totLivreGlobal = Object.values(esferas).reduce((a, b) => a + b.livre, 0);
+    const totBloqGlobal = Object.values(esferas).reduce((a, b) => a + b.bloqueado, 0);
+
+    if (kpisBox) {
+        kpisBox.innerHTML = `
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                <span class="text-[10px] font-bold uppercase text-slate-500 block">Total Emendas Ativas (No IPM)</span>
+                <strong class="text-base font-extrabold text-slate-900">${formatarBRL(totAtivoGlobal)}</strong>
+            </div>
+            <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-xl">
+                <span class="text-[10px] font-bold uppercase text-blue-800 block">Total Já Empenhado</span>
+                <strong class="text-base font-extrabold text-blue-900">${formatarBRL(totEmpGlobal)}</strong>
+            </div>
+            <div class="bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl">
+                <span class="text-[10px] font-bold uppercase text-emerald-800 block">Saldo Livre das Emendas</span>
+                <strong class="text-base font-extrabold text-emerald-700">${formatarBRL(totLivreGlobal)}</strong>
+            </div>
+            <div class="bg-slate-100 border border-slate-300 p-3 rounded-xl">
+                <span class="text-[10px] font-bold uppercase text-slate-600 block">⏳ A Entrar / Em Liberação (FNS + Pendentes)</span>
+                <strong class="text-base font-extrabold text-slate-600">${formatarBRL(totBloqGlobal)}</strong>
+            </div>
+        `;
+    }
+
+    if (chartEmendasBIInstance) chartEmendasBIInstance.destroy();
     const ctx = canvas.getContext('2d');
-    if (chartEvolucaoInstance) chartEvolucaoInstance.destroy();
 
-    const mediaLiqMensal = 6058631.58;
-    const projecaoMensal = Math.round(mediaLiqMensal * fator);
+    let labels = [];
+    let dataAtivo = [];
+    let dataEmp = [];
+    let dataLivre = [];
+    let dataBloq = [];
 
-    const labels = ['Jan/26', 'Fev/26', 'Mar/26', 'Abr/26', 'Mai/26', 'Jun/26', 'Jul/26', 'Ago/26', 'Set/26', 'Out/26', 'Nov/26 (Proj)', 'Dez/26 (Proj)'];
-    const empenhadoReal = [10934866, 9447111, 6334337, 4630203, 6397729, 7359855, 4864197, 4539911, 5683784, 6327951, Math.round(projecaoMensal * 0.95), Math.round(projecaoMensal * 1.05)];
-    const liquidadoReal = [5002210, 5572517, 6193390, 5498045, 6348585, 7287801, 6710780, 5252001, 6589527, 6131455, projecaoMensal, projecaoMensal];
-    const pagoBrutoReal = [4176888, 6651247, 6298820, 7626624, 7243805, 8053208, 4985498, 4927758, 10043975, 6611607, Math.round(projecaoMensal * 0.98), Math.round(projecaoMensal * 1.10)];
+    if (!modoDetalheEmendasBI) {
+        wrapper.style.height = '280px';
+        labels = Object.keys(esferas);
+        dataAtivo = labels.map(k => esferas[k].totalAtivo);
+        dataEmp = labels.map(k => esferas[k].empenhado);
+        dataLivre = labels.map(k => esferas[k].livre);
+        dataBloq = labels.map(k => esferas[k].bloqueado);
+    } else {
+        const listaAutores = Object.entries(porAutor)
+            .sort((a, b) => (b[1].totalAtivo + b[1].bloqueado) - (a[1].totalAtivo + a[1].bloqueado));
+        wrapper.style.height = Math.max(380, listaAutores.length * 36) + 'px';
+        labels = listaAutores.map(x => x[0]);
+        dataAtivo = listaAutores.map(x => x[1].totalAtivo);
+        dataEmp = listaAutores.map(x => x[1].empenhado);
+        dataLivre = listaAutores.map(x => x[1].livre);
+        dataBloq = listaAutores.map(x => x[1].bloqueado);
+    }
 
-    chartEvolucaoInstance = new Chart(ctx, {
+    const scalesConfig = modoDetalheEmendasBI
+        ? {
+            x: { beginAtZero: true, ticks: { callback: (v) => 'R$ ' + (Number(v) / 1000).toFixed(0) + 'k' } },
+            y: { ticks: { autoSkip: false } }
+          }
+        : {
+            x: { ticks: { autoSkip: false } },
+            y: { beginAtZero: true, ticks: { callback: (v) => 'R$ ' + (Number(v) / 1000000).toFixed(1) + ' Mi' } }
+          };
+
+    chartEmendasBIInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels,
             datasets: [
-                { type: 'line', label: 'Liquidado Mensal + Simulação (R$)', data: liquidadoReal, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 3, tension: 0.3, fill: true },
-                { type: 'bar', label: 'Empenhado no Mês (R$)', data: empenhadoReal, backgroundColor: '#0f172a', borderRadius: 4 },
-                { type: 'bar', label: 'Pago Bruto no Mês (R$)', data: pagoBrutoReal, backgroundColor: '#3b82f6', borderRadius: 4 }
+                { label: 'Total Ativo no IPM (R$)', data: dataAtivo, backgroundColor: '#0f172a', borderRadius: 4 },
+                { label: 'Total Empenhado (R$)', data: dataEmp, backgroundColor: '#2563eb', borderRadius: 4 },
+                { label: 'Saldo Livre Disponível (R$)', data: dataLivre, backgroundColor: '#10b981', borderRadius: 4 },
+                { label: '⏳ A Entrar / Em Liberação (Bloqueado)', data: dataBloq, backgroundColor: '#94a3b8', borderRadius: 4 }
             ]
         },
         options: {
+            indexAxis: modoDetalheEmendasBI ? 'y' : 'x',
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
                 tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatarBRL(c.raw)}` } }
             },
+            scales: scalesConfig
+        }
+    });
+}
+
+// GRAFICO 2: ORCAMENTO POR CATEGORIA PRATICA (COMBUSTIVEL, MEDICAMENTOS, PERMANENTE, ETC.)
+function alternarExpansaoCategoriasBI() {
+    mostrarTodasCategoriasBI = !mostrarTodasCategoriasBI;
+    const btn = document.getElementById('btnExpandirCategoriasBI');
+    if (btn) {
+        btn.innerHTML = mostrarTodasCategoriasBI
+            ? `<i data-lucide="list-minus" class="w-3.5 h-3.5"></i> Mostrar Apenas Top 5 Categorias`
+            : `<i data-lucide="list-plus" class="w-3.5 h-3.5"></i> Mostrar Todas as Categorias`;
+    }
+    renderizarGraficoCategoriasBI();
+    if (window.lucide) lucide.createIcons();
+}
+
+function renderizarGraficoCategoriasBI() {
+    const canvas = document.getElementById('chartCategoriasBI');
+    const wrapper = document.getElementById('wrapperGraficoCategorias');
+    if (!canvas || !wrapper) return;
+
+    const dotacoes = obterDotacoesFiltroGlobal();
+    const elFiltroFolha = document.getElementById('selectFiltroCategoriaBI');
+    const incluirFolha = elFiltroFolha ? elFiltroFolha.value === 'COM_FOLHA' : false;
+
+    const definicaoCategorias = [
+        {
+            nome: '⛽ Combustível, Frota, TFD & SAMU',
+            termoBuscaAba2: 'combustivel',
+            filtro: (d) => {
+                const txt = normalizarTexto(`${d.acao} ${d.regraPode} ${d.tagsBusca}`);
+                return d.acao.includes('2084') || d.acao.includes('2086') || txt.includes('combustivel') || txt.includes('frota') || txt.includes('ambulancia');
+            }
+        },
+        {
+            nome: '💊 Medicamentos & Insumos (Gaze/Seringa)',
+            termoBuscaAba2: 'gaze',
+            filtro: (d) => {
+                const mod = String(d.modalidade).substring(0, 6);
+                return (d.acao.includes('2089') || d.acao.includes('2090') || String(d.vinculo_desc).includes('017/223') || [512, 514, 518, 545].includes(d.ref)) && mod === '333900';
+            }
+        },
+        {
+            nome: '❄️ Material Permanente, Móveis & Veículos',
+            termoBuscaAba2: 'cadeira',
+            filtro: (d) => {
+                const mod = String(d.modalidade).substring(0, 6);
+                return mod === '344900' || mod === '344710' || mod === '344500';
+            }
+        },
+        {
+            nome: '🤝 Exames & Consórcio CISAMUREL',
+            termoBuscaAba2: 'consorcio',
+            filtro: (d) => String(d.modalidade).startsWith('333710')
+        },
+        {
+            nome: '🏥 Hospital São Camilo, APAE, AMAI & Entidades',
+            termoBuscaAba2: 'entidade',
+            filtro: (d) => String(d.modalidade).startsWith('333500') || String(d.modalidade).startsWith('344500')
+        },
+        {
+            nome: '🛠️ Reforma, Obras & Manutenção de UBSs',
+            termoBuscaAba2: 'manutencao',
+            filtro: (d) => d.acao.includes('1020') || [535, 537, 538, 620, 621].includes(d.ref)
+        },
+        {
+            nome: '💻 Tecnologia, Sistemas & SUS Digital',
+            termoBuscaAba2: 'tecnologia',
+            filtro: (d) => d.acao.includes('2121') || [83, 510, 515, 520, 779].includes(d.ref)
+        },
+        {
+            nome: '🦷 Saúde Bucal & Consultórios Odontológicos',
+            termoBuscaAba2: 'odonto',
+            filtro: (d) => d.acao.includes('2076') || [514, 535, 761, 762].includes(d.ref)
+        },
+        {
+            nome: '🏢 Custeio Geral APS / MAC & Aluguéis',
+            termoBuscaAba2: 'aluguel',
+            filtro: (d) => String(d.modalidade).startsWith('333900') && (d.acao.includes('2075') || d.acao.includes('2080') || d.acao.includes('2083'))
+        }
+    ];
+
+    if (incluirFolha) {
+        definicaoCategorias.unshift({
+            nome: '👥 Folha de Pagamento & Encargos (RH)',
+            termoBuscaAba2: 'folha',
+            filtro: (d) => String(d.modalidade).startsWith('331900') || String(d.modalidade).startsWith('331710')
+        });
+    }
+
+    const resultadosCat = definicaoCategorias.map(cat => {
+        const refsMatch = dotacoes.filter(cat.filtro);
+        return {
+            nome: cat.nome,
+            termoBuscaAba2: cat.termoBuscaAba2,
+            qtdRefs: refsMatch.length,
+            orcado: refsMatch.reduce((a, b) => a + b.atualizado, 0),
+            empenhado: refsMatch.reduce((a, b) => a + b.empenhado, 0),
+            livre: refsMatch.reduce((a, b) => a + b.saldo_reserva, 0)
+        };
+    }).sort((a, b) => b.livre - a.livre);
+
+    const exibidas = mostrarTodasCategoriasBI ? resultadosCat : resultadosCat.slice(0, 5);
+    wrapper.style.height = mostrarTodasCategoriasBI ? '430px' : '280px';
+
+    if (chartCategoriasBIInstance) chartCategoriasBIInstance.destroy();
+    const ctx = canvas.getContext('2d');
+
+    chartCategoriasBIInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: exibidas.map(c => `${c.nome} (${c.qtdRefs} Refs)`),
+            datasets: [
+                { label: 'Total das Dotações (Atualizado)', data: exibidas.map(c => c.orcado), backgroundColor: '#0f172a', borderRadius: 4 },
+                { label: 'Total Empenhado', data: exibidas.map(c => c.empenhado), backgroundColor: '#f59e0b', borderRadius: 4 },
+                { label: 'Saldo Disponível p/ Comprar', data: exibidas.map(c => c.livre), backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: (evt, elements) => {
+                if (elements && elements.length > 0) {
+                    const idx = elements[0].index;
+                    const catClicada = exibidas[idx];
+                    if (catClicada) {
+                        trocarAba('aba-dotacoes', document.getElementById('btn-aba-dotacoes'));
+                        const inp = document.getElementById('inputBuscaNecessidade');
+                        if (inp) inp.value = catClicada.termoBuscaAba2;
+                        filtrarAbaDotacoes();
+                    }
+                }
+            },
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
+                tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatarBRL(c.raw)} (Clique p/ abrir as dotações)` } }
+            },
             scales: {
-                y: { beginAtZero: true, ticks: { callback: (v) => 'R$ ' + (v / 1000000).toFixed(1) + ' Mi' } }
+                x: {
+                    beginAtZero: true,
+                    ticks: { callback: (v) => 'R$ ' + (Number(v) / 1000000).toFixed(1) + ' Mi' }
+                },
+                y: {
+                    ticks: { autoSkip: false }
+                }
             }
         }
     });
 }
 
+// GRAFICOS 3 E 4: FONTES DE RECURSO E FUNIL FINANCEIRO GLOBAL
 function renderizarGraficos(dotacoes) {
     const cFontes = document.getElementById('chartFontes');
     const cBlocos = document.getElementById('chartBlocos');
@@ -720,24 +1022,38 @@ function renderizarGraficos(dotacoes) {
     if (chartFontesInstance) chartFontesInstance.destroy();
     if (chartBlocosInstance) chartBlocosInstance.destroy();
 
-    const porAcao = {};
+    const fontesMacro = {
+        'Impostos Próprios (15% Município)': { emp: 0, res: 0, livre: 0 },
+        'SUS União (Repasses Fundo a Fundo)': { emp: 0, res: 0, livre: 0 },
+        'SUS Estado SC (Cofinanciamento)': { emp: 0, res: 0, livre: 0 },
+        'Emendas Parlamentares (Ver./Dep.)': { emp: 0, res: 0, livre: 0 }
+    };
+
     dotacoes.forEach(d => {
-        const k = d.acao.slice(0, 26);
-        if (!porAcao[k]) porAcao[k] = { emp: 0, res: 0, livre: 0 };
-        porAcao[k].emp += d.empenhado;
-        porAcao[k].res += d.reservado;
-        porAcao[k].livre += d.saldo_reserva;
+        const vCod = String(d.vinculo_cod);
+        let k = 'SUS União (Repasses Fundo a Fundo)';
+        if (d.ehEmenda) {
+            k = 'Emendas Parlamentares (Ver./Dep.)';
+        } else if (vCod.startsWith('1500') || vCod.startsWith('1501') || vCod.startsWith('2500')) {
+            k = 'Impostos Próprios (15% Município)';
+        } else if (vCod.startsWith('1621') || vCod.startsWith('2621')) {
+            k = 'SUS Estado SC (Cofinanciamento)';
+        }
+        fontesMacro[k].emp += d.empenhado;
+        fontesMacro[k].res += d.reservado;
+        fontesMacro[k].livre += d.saldo_reserva;
     });
-    const labels = Object.keys(porAcao).slice(0, 6);
+
+    const labels = Object.keys(fontesMacro);
 
     chartFontesInstance = new Chart(ctxFontes, {
         type: 'bar',
         data: {
             labels,
             datasets: [
-                { label: 'Empenhado', data: labels.map(k => porAcao[k].emp), backgroundColor: '#0f172a', borderRadius: 4 },
-                { label: 'Reservado', data: labels.map(k => porAcao[k].res), backgroundColor: '#f59e0b', borderRadius: 4 },
-                { label: 'Livre Real', data: labels.map(k => porAcao[k].livre), backgroundColor: '#10b981', borderRadius: 4 }
+                { label: 'Empenhado', data: labels.map(k => fontesMacro[k].emp), backgroundColor: '#0f172a', borderRadius: 4 },
+                { label: 'Reservado', data: labels.map(k => fontesMacro[k].res), backgroundColor: '#f59e0b', borderRadius: 4 },
+                { label: 'Saldo Livre Real', data: labels.map(k => fontesMacro[k].livre), backgroundColor: '#10b981', borderRadius: 4 }
             ]
         },
         options: {
@@ -747,7 +1063,7 @@ function renderizarGraficos(dotacoes) {
                 legend: { position: 'bottom' },
                 tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatarBRL(c.raw)}` } }
             },
-            scales: { y: { ticks: { callback: (v) => 'R$ ' + (v / 1000000).toFixed(1) + 'M' } } }
+            scales: { y: { ticks: { callback: (v) => 'R$ ' + (Number(v) / 1000000).toFixed(1) + 'M' } } }
         }
     });
 
@@ -780,57 +1096,6 @@ function renderizarGraficos(dotacoes) {
             }
         }
     });
-}
-
-function renderizarResumoExecutivo(dotacoes) {
-    const tbody = document.getElementById('tabelaResumoExecutivo');
-    if (!tbody) return;
-
-    const elOrd1 = document.getElementById('selectOrdenacaoAba1');
-    const ordenacao = elOrd1 ? elOrd1.value : 'NUMERICA';
-    let lista = [...dotacoes];
-    if (ordenacao === 'ALFABETICA') {
-        lista.sort((a, b) => a.acao.localeCompare(b.acao, 'pt-BR'));
-    } else if (ordenacao === 'SALDO_DESC') {
-        lista.sort((a, b) => b.saldo_reserva - a.saldo_reserva);
-    } else {
-        lista.sort((a, b) => a.ref - b.ref);
-    }
-
-    const contEl = document.getElementById('contadorRefsTabela');
-    if (contEl) contEl.textContent = `Exibindo ${lista.length} dotações (Refs)`;
-
-    const somaAtualizado = dotacoes.reduce((a, b) => a + b.atualizado, 0);
-    const somaEmp = dotacoes.reduce((a, b) => a + b.empenhado, 0);
-    const somaEmendasLivres = dotacoes.filter(d => d.ehEmenda).reduce((a, b) => a + b.saldo_reserva, 0);
-    const somaParados = auditoriaParadosDB.reduce((a, b) => a + b.saldo, 0);
-
-    const kpiOrc = document.getElementById('kpiOrcadoAtual');
-    const kpiSub = document.getElementById('kpiSubOrcado');
-    const kpiEme = document.getElementById('kpiEmendasLivres');
-    const kpiPar = document.getElementById('kpiParadosTopo');
-
-    if (kpiOrc) kpiOrc.textContent = formatarBRL(somaAtualizado);
-    if (kpiSub) kpiSub.innerHTML = `Empenhado: <strong>${formatarBRL(somaEmp)}</strong> (Clique p/ abrir)`;
-    if (kpiEme) kpiEme.textContent = formatarBRL(somaEmendasLivres);
-    if (kpiPar) kpiPar.textContent = formatarBRL(somaParados);
-
-    tbody.innerHTML = lista.map(d => {
-        const badges = d.permissoesTags.map(t => `<span class="inline-block bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] font-semibold mr-1 mb-0.5">${t}</span>`).join('');
-        const nomeVinc = d.tituloEmendaCustom ? d.tituloEmendaCustom : d.vinculo_desc;
-        return `
-            <tr class="hover:bg-slate-50">
-                <td class="py-2.5 px-3 whitespace-nowrap">${gerarBadgeRefComPopover(d.ref)}</td>
-                <td class="py-2.5 px-3 font-medium text-slate-800 max-w-[210px] truncate" title="${d.acao}">${d.acao}</td>
-                <td class="py-2.5 px-3 text-slate-600 max-w-[220px] truncate" title="${nomeVinc}">${nomeVinc}</td>
-                <td class="py-2.5 px-3">${badges}</td>
-                <td class="py-2.5 px-3 text-right font-medium">${formatarBRL(d.atualizado)}</td>
-                <td class="py-2.5 px-3 text-right text-slate-600">${formatarBRL(d.empenhado)}</td>
-                <td class="py-2.5 px-3 text-right text-amber-700 font-medium">${formatarBRL(d.reservado)}</td>
-                <td class="py-2.5 px-3 text-right font-extrabold ${d.saldo_reserva <= 1000 ? 'text-rose-600' : 'text-emerald-600'}">${formatarBRL(d.saldo_reserva)}</td>
-            </tr>
-        `;
-    }).join('');
 }
 
 // =========================================================================
@@ -954,7 +1219,6 @@ function simularCompra() {}
 
 // =========================================================================
 // 8. ABA 3: RENDERIZADOR DE EMENDAS PARLAMENTARES
-//    (EMENDAS SEM DOTACAO NO IPM FICAM EM CINZA, COM VALOR RISCADO E "EM PROCESSO DE LIBERACAO")
 // =========================================================================
 function renderizarEmendas() {
     const dotacoes = obterDotacoesFiltroGlobal();
@@ -997,7 +1261,6 @@ function renderizarEmendas() {
         info.tags.forEach(t => agrupadas[key].tagsGlobais.add(t));
     });
 
-    // Emendas Impositivas do PDF que ainda NAO possuem dotacao aberta no IPM (Ex: 017 e 126)
     emendasImpositivas2025.forEach(imp => {
         const codEsperado = '150070112' + imp.num;
         const existeNoIPM = dotacoesDB.some(d => String(d.vinculo_cod) === codEsperado);
@@ -1028,7 +1291,6 @@ function renderizarEmendas() {
         }
     });
 
-    // 24 Propostas Federais do FNS (Extratos do Portal FNS — em processo de liberacao)
     propostasFNSReais.forEach((p, idxP) => {
         const key = `🇧🇷 [FNS ${p.ano}] ${p.parlamentar} — ${p.objeto} (Proposta nº ${p.numero})`;
         agrupadas[key] = {
@@ -1173,7 +1435,7 @@ function renderizarEmendas() {
 }
 
 // =========================================================================
-// 9. ABA 4: CONTRATOS E FILA DA TESOURARIA (COM BUSCA E ORDENACAO PADRAO)
+// 9. ABA 4: CONTRATOS E FILA DA TESOURARIA
 // =========================================================================
 function filtrarContratos(modo) {
     filtroSituacaoContratoAtivo = modo;
@@ -1248,7 +1510,7 @@ function renderizarFixos() {
 }
 
 // =========================================================================
-// 10. ABA 5: AUDITORIA DE EMPENHOS PARADOS (COM BUSCA E ORDENACAO PADRAO)
+// 10. ABA 5: AUDITORIA DE EMPENHOS PARADOS
 // =========================================================================
 function sincronizarInputAuditoria(valorDigitado) {
     const sel = document.getElementById('filtroRefAuditoriaSelect');
@@ -1601,7 +1863,7 @@ function gerarPDFRelatorio() {
 function exportarCSVTelaAtual() {
     const abaAtiva = document.querySelector('.tab-content.active');
     const tabela = abaAtiva ? abaAtiva.querySelector('table') : null;
-    if (!tabela) { alert('Para exportar os cards visuais desta aba, utilize o botão Relatório PDF.'); return; }
+    if (!tabela) { alert('Para exportar os cards e gráficos desta aba, utilize o botão Relatório PDF.'); return; }
     const csv = Array.from(tabela.querySelectorAll('tr')).map(tr =>
         Array.from(tr.querySelectorAll('th, td')).map(td => `"${td.innerText.replace(/\n/g, ' ').trim()}"`).join(';')
     );
@@ -1613,9 +1875,10 @@ function exportarCSVTelaAtual() {
 
 function renderizarTudo() {
     const filtradas = obterDotacoesFiltroGlobal();
-    atualizarGraficoMensal();
-    renderizarGraficos(filtradas);
-    renderizarResumoExecutivo(filtradas);
+    atualizarKPIsTopo(filtradas);
+    try { renderizarGraficoEmendasBI(); } catch (e) { console.error('Erro Grafico Emendas:', e); }
+    try { renderizarGraficoCategoriasBI(); } catch (e) { console.error('Erro Grafico Categorias:', e); }
+    try { renderizarGraficos(filtradas); } catch (e) { console.error('Erro Graficos Fontes/Blocos:', e); }
     filtrarAbaDotacoes();
     renderizarEmendas();
     renderizarFixos();
@@ -1629,7 +1892,10 @@ Object.assign(window, {
     drillDownTesouraria,
     drillDownAuditoria,
     drillDownEmendas,
-    atualizarGraficoMensal,
+    alternarVisaoGraficoEmendas,
+    renderizarGraficoEmendasBI,
+    alternarExpansaoCategoriasBI,
+    renderizarGraficoCategoriasBI,
     selecionarChipPermissao,
     limparBuscaPermissao,
     filtrarAbaDotacoes,
