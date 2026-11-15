@@ -252,7 +252,6 @@ export function classificarPermissoesDotacao(refNum, acao, modalidade, vinculoDe
     const ehEntidadeCapital = (modCod === '344500');
     const ehConsorcio = (modCod === '333710');
 
-    // 1. Classificação estrita por Natureza da Despesa
     if (ehFolha) {
         tags.push('Folha / Pessoal (33190)');
         regraPode = 'Exclusivo para Folha de Pagamento (3.1.90 / 3.1.71): Vencimentos, salários, 13º salário, férias e encargos patronais de servidores.';
@@ -288,7 +287,6 @@ export function classificarPermissoesDotacao(refNum, acao, modalidade, vinculoDe
         tagsBuscaExtra += ' cisamurel consorcio exame consulta ultrassom ultrassonografia tomografia ressonancia colonoscopia endoscopia ';
     }
 
-    // 2. Tags e itens por Ação Orçamentária (SEMPRE respeitando a Natureza da Despesa!)
     if (acaoUpper.includes('2084') || acaoUpper.includes('TFD') || acaoUpper.includes('2086') || acaoUpper.includes('SAMU')) {
         tags.push('Transporte / TFD / SAMU');
         if (ehCusteioDireto) {
@@ -339,32 +337,26 @@ export function classificarPermissoesDotacao(refNum, acao, modalidade, vinculoDe
                      vCod.startsWith('270031') || vCod.startsWith('262132') ||
                      vincUpper.includes('PORTARIA 017') || vincUpper.includes('CONVÊNIOS');
 
-    // 3. Regra específica da planilha Emendas_Parlamentares_Aplicação.xlsx (por número da Ref.)
     if (regrasPlanilhaPorRef[refNum]) {
         const rp = regrasPlanilhaPorRef[refNum];
         tags.push(rp.parlamentar);
-        tituloEmendaCustom = `🇧🇷 ${rp.parlamentar} (Ref. ${refNum})`;
+        tituloEmendaCustom = `🇧🇷 ${rp.parlamentar} (Ref.${refNum})`;
         regraPode = rp.pode;
         regraNaoPode = rp.naoPode;
-        // Substitui as tags genéricas pela descrição exata da planilha da emenda federal
-        tagsBuscaExtra = ` ${rp.parlamentar} ${rp.pode} `;
+        tagsBuscaExtra = ` ${rp.parlamentar}${rp.pode} `;
     }
 
-    // 4. Cruzamento exato pelos 3 últimos dígitos do vínculo IPM (150070112XXX -> Emendas Impositivas)
     if (vCod.startsWith('150070112')) {
         const num3 = vCod.slice(-3);
         const imp = emendasImpositivas2025.find(e => e.num === num3);
         if (imp) {
-            tags.push(`Vereador(a): ${imp.autor}`);
-            tags.push(`Destino: ${imp.beneficiario}`);
+            tags.push(`Vereador(a): ${imp.autor}`); tags.push(`Destino: ${imp.beneficiario}`);
             if (imp.pd) tags.push(imp.pd);
-            tituloEmendaCustom = `🏛️ Emenda Impositiva nº ${imp.num} — ${imp.autor} ➔ ${imp.beneficiario}`;
-            // Se a emenda tem desdobramento 3350 vs 4450, usa o texto específico da modalidade daquela Ref!
+            tituloEmendaCustom = `🏛️ Emenda Impositiva nº ${imp.num} — ${imp.autor} ➔${imp.beneficiario}`;
             const podeEspecifico = (ehEntidadeCusteio && imp.pode3350) ? imp.pode3350 : ((ehEntidadeCapital && imp.pode4450) ? imp.pode4450 : imp.pode);
-            regraPode = `${podeEspecifico} (Natureza: ${imp.natureza}).`;
+            regraPode = `${podeEspecifico} (Natureza:${imp.natureza}).`;
             regraNaoPode = imp.naoPode;
-            // Nas emendas impositivas, a busca olha apenas para os itens específicos do Plano de Trabalho daquela emenda!
-            tagsBuscaExtra = ` ${imp.autor} ${imp.beneficiario} ${podeEspecifico} emenda ${imp.num} `;
+            tagsBuscaExtra = ` ${imp.autor}${imp.beneficiario} ${podeEspecifico} emenda${imp.num} `;
         } else {
             tituloEmendaCustom = `🏛️ Emenda Impositiva nº ${num3} — Emenda Municipal (Saúde)`;
         }
@@ -392,18 +384,8 @@ export function classificarPermissoesDotacao(refNum, acao, modalidade, vinculoDe
     } else if (vincUpper.includes('CONVÊNIOS - UNIÃO')) {
         tituloEmendaCustom = `🤝 Convênio da União — Repasse Externo (${vCod})`;
     } else if (vincUpper.includes('CONVÊNIOS - ESTADO')) {
-        tituloEmendaCustom = `🤝 Convênio do Estado — Repasse Externo (${vCod})`;
-    }
-
-    // 5. Integração das Regras Customizadas (Editadas pela Contadora no Modal + Supabase)
-    const regraEditada = customRulesDB[refNum];
-    if (regraEditada) {
-        if (regraEditada.pode) {
-            regraPode = regraPode ? `${regraPode} | ✍️ ADICIONADO PELA CONTABILIDADE: ${regraEditada.pode}` : `✍️ ADICIONADO PELA CONTABILIDADE: ${regraEditada.pode}`;
-            tagsBuscaExtra += ` ${regraEditada.pode} `;
-        }
-        if (regraEditada.naoPode) {
-            regraNaoPode = regraNaoPode ? `${regraNaoPode} | ✍️ VEDADO (CONTABILIDADE): ${regraEditada.naoPode}` : `✍️ VEDADO (CONTABILIDADE): ${regraEditada.naoPode}`;
+        tituloEmendaCustom = `🤝 Convênio do Estado — Repasse Externo (${vCod})`; }  const regraEditada = customRulesDB[refNum]; if (regraEditada) { if (regraEditada.pode) { regraPode = regraPode ? `${regraPode} | ✍️ ADICIONADO PELA CONTABILIDADE: ${regraEditada.pode}` : `✍️ ADICIONADO PELA CONTABILIDADE: ${regraEditada.pode}`;
+            tagsBuscaExtra += ` ${regraEditada.pode} `; } if (regraEditada.naoPode) { regraNaoPode = regraNaoPode ? `${regraNaoPode} | ✍️ VEDADO (CONTABILIDADE): ${regraEditada.naoPode}` : `✍️ VEDADO (CONTABILIDADE): ${regraEditada.naoPode}`;
         }
         tags.push('✍️ Editado pela Contabilidade');
     }
@@ -590,7 +572,7 @@ function gerarBadgeRefComPopover(numRef) {
         <span class="ref-badge px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 font-extrabold text-xs transition">
             Ref. ${d.ref} <i data-lucide="info" class="w-3 h-3"></i>
             <span class="ref-popover">
-                <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">Dotação Ref. ${d.ref} • ${d.ehEmenda ? 'Emenda Parlamentar' : 'Orçamento Regular'}</span>
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">Dotação Ref. ${d.ref} •${d.ehEmenda ? 'Emenda Parlamentar' : 'Orçamento Regular'}</span>
                 <span class="block font-bold text-xs text-white mb-1">${d.acao}</span>
                 <span class="block text-[11px] text-slate-300 mb-2"><strong>Vínculo:</strong> ${d.tituloEmendaCustom || d.vinculo_desc}</span>
                 <span class="block text-[11px] text-emerald-300 bg-slate-800 p-1.5 rounded border border-slate-700 mb-1.5"><strong>✅ Pode pagar:</strong> ${d.regraPode}</span>
@@ -615,7 +597,7 @@ function popularFiltrosGlobais() {
     if (selDot) {
         const ordenadasRef = [...dotacoesDB].sort((a, b) => a.ref - b.ref);
         selDot.innerHTML = `<option value="TODAS" class="bg-slate-900">Todas as Refs (${dotacoesDB.length})</option>`;
-        ordenadasRef.forEach(d => selDot.innerHTML += `<option value="${d.ref}" class="bg-slate-900">Ref. ${d.ref} • ${(d.tituloEmendaCustom || d.vinculo_desc).slice(0, 38)} (${formatarBRL(d.saldo_reserva)})</option>`);
+        ordenadasRef.forEach(d => selDot.innerHTML += `<option value="${d.ref}" class="bg-slate-900">Ref. ${d.ref} • ${(d.tituloEmendaCustom \vert{}\vert{} d.vinculo_desc).slice(0, 38)} (${formatarBRL(d.saldo_reserva)})</option>`);
     }
 
     const selAud = document.getElementById('filtroRefAuditoriaSelect');
@@ -627,7 +609,7 @@ function popularFiltrosGlobais() {
             const qtd = auditoriaParadosDB.filter(x => x.ref === rNum).length;
             const soma = auditoriaParadosDB.filter(x => x.ref === rNum).reduce((a, b) => a + b.saldo, 0);
             const desc = dot ? (dot.tituloEmendaCustom || dot.vinculo_desc).slice(0, 34) : 'Dotação FMS';
-            selAud.innerHTML += `<option value="${rNum}">Ref. ${rNum} (${qtd} emp. = ${formatarBRL(soma)}) • ${desc}</option>`;
+            selAud.innerHTML += `<option value="${rNum}">Ref. ${rNum} (${qtd} emp. = ${formatarBRL(soma)}) •${desc}</option>`;
         });
     }
 }
@@ -703,7 +685,7 @@ function atualizarGraficoMensal() {
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
-                tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatarBRL(c.raw)}` } }
+                tooltip: { callbacks: { label: (c) => `${c.dataset.label}:${formatarBRL(c.raw)}` } }
             },
             scales: {
                 y: { beginAtZero: true, ticks: { callback: (v) => 'R$ ' + (v / 1000000).toFixed(1) + ' Mi' } }
@@ -747,7 +729,7 @@ function renderizarGraficos(dotacoes) {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatarBRL(c.raw)}` } }
+                tooltip: { callbacks: { label: (c) => `${c.dataset.label}:${formatarBRL(c.raw)}` } }
             },
             scales: { y: { ticks: { callback: (v) => 'R$ ' + (v / 1000000).toFixed(1) + 'M' } } }
         }
@@ -778,7 +760,7 @@ function renderizarGraficos(dotacoes) {
             maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } },
-                tooltip: { callbacks: { label: (c) => `${c.label}: ${formatarBRL(c.raw)}` } }
+                tooltip: { callbacks: { label: (c) => `${c.label}:${formatarBRL(c.raw)}` } }
             }
         }
     });
@@ -799,20 +781,7 @@ function renderizarResumoExecutivo(dotacoes) {
     }
 
     const contEl = document.getElementById('contadorRefsTabela');
-    if (contEl) contEl.textContent = `Exibindo ${lista.length} dotações (Refs)`;
-
-    const somaAtualizado = dotacoes.reduce((a, b) => a + b.atualizado, 0);
-    const somaEmp = dotacoes.reduce((a, b) => a + b.empenhado, 0);
-    const somaEmendasLivres = dotacoes.filter(d => d.ehEmenda).reduce((a, b) => a + b.saldo_reserva, 0);
-    const somaParados = auditoriaParadosDB.reduce((a, b) => a + b.saldo, 0);
-
-    const kpiOrc = document.getElementById('kpiOrcadoAtual');
-    const kpiSub = document.getElementById('kpiSubOrcado');
-    const kpiEme = document.getElementById('kpiEmendasLivres');
-    const kpiPar = document.getElementById('kpiParadosTopo');
-
-    if (kpiOrc) kpiOrc.textContent = formatarBRL(somaAtualizado);
-    if (kpiSub) kpiSub.innerHTML = `Empenhado: <strong>${formatarBRL(somaEmp)}</strong> (Clique p/ abrir)`;
+    if (contEl) contEl.textContent = `Exibindo ${lista.length} dotações (Refs)`;  const somaAtualizado = dotacoes.reduce((a, b) => a + b.atualizado, 0); const somaEmp = dotacoes.reduce((a, b) => a + b.empenhado, 0); const somaEmendasLivres = dotacoes.filter(d => d.ehEmenda).reduce((a, b) => a + b.saldo_reserva, 0); const somaParados = auditoriaParadosDB.reduce((a, b) => a + b.saldo, 0);  const kpiOrc = document.getElementById('kpiOrcadoAtual'); const kpiSub = document.getElementById('kpiSubOrcado'); const kpiEme = document.getElementById('kpiEmendasLivres'); const kpiPar = document.getElementById('kpiParadosTopo');  if (kpiOrc) kpiOrc.textContent = formatarBRL(somaAtualizado); if (kpiSub) kpiSub.innerHTML = `Empenhado: <strong>${formatarBRL(somaEmp)}</strong> (Clique p/ abrir)`;
     if (kpiEme) kpiEme.textContent = formatarBRL(somaEmendasLivres);
     if (kpiPar) kpiPar.textContent = formatarBRL(somaParados);
 
@@ -822,7 +791,7 @@ function renderizarResumoExecutivo(dotacoes) {
             <tr class="hover:bg-slate-50">
                 <td class="py-2.5 px-3 whitespace-nowrap">${gerarBadgeRefComPopover(d.ref)}</td>
                 <td class="py-2.5 px-3 font-medium text-slate-800 max-w-[210px] truncate" title="${d.acao}">${d.acao}</td>
-                <td class="py-2.5 px-3 text-slate-600 max-w-[220px] truncate" title="${d.tituloEmendaCustom || d.vinculo_desc}">${d.tituloEmendaCustom || d.vinculo_desc}</td>
+                <td class="py-2.5 px-3 text-slate-600 max-w-[220px] truncate" title="${d.tituloEmendaCustom \vert{}\vert{} d.vinculo_desc}">${d.tituloEmendaCustom || d.vinculo_desc}</td>
                 <td class="py-2.5 px-3">${badges}</td>
                 <td class="py-2.5 px-3 text-right font-medium">${formatarBRL(d.atualizado)}</td>
                 <td class="py-2.5 px-3 text-right text-slate-600">${formatarBRL(d.empenhado)}</td>
@@ -861,8 +830,7 @@ function filtrarAbaDotacoes() {
 
     let filtradas = base.filter(d => {
         const matchTag = tagPermissaoAtiva === 'TODOS' || d.permissoesTags.some(t => t.includes(tagPermissaoAtiva) || tagPermissaoAtiva.includes(t));
-        // Busca apenas no texto positivo (regraPode + tagsBusca + metadados da dotação), NUNCA no texto de vedação (regraNaoPode)!
-        const texto = normalizarTexto(`Ref ${d.ref} ${d.acao} ${d.vinculo_desc} ${d.tituloEmendaCustom || ''} ${d.regraPode} ${d.tagsBusca || ''} ${d.permissoesTags.join(' ')}`).replace(/\bgase\b/g, 'gaze');
+        const texto = normalizarTexto(`Ref ${d.ref} ${d.acao}${d.vinculo_desc} ${d.tituloEmendaCustom \vert{}\vert{} ''}${d.regraPode} ${d.tagsBusca \vert{}\vert{} ''}${d.permissoesTags.join(' ')}`).replace(/\bgase\b/g, 'gaze');
         const matchTermo = !termo || texto.includes(termo);
         const matchSaldo = modoSaldo === 'TODAS' || d.saldo_reserva > 100;
         return matchTag && matchTermo && matchSaldo;
@@ -882,700 +850,4 @@ function filtrarAbaDotacoes() {
         boxResumo.classList.remove('hidden');
         boxResumo.innerHTML = `
             <div>🔎 <strong>${filtradas.length} Dotações (Refs) compatíveis encontradas</strong> • Soma Livre Real p/ Reserva: <strong class="text-emerald-700 text-sm">${formatarBRL(somaRealLivre)}</strong></div>
-            <div class="text-[11px] text-blue-700 font-semibold">💡 Clique em "Abrir Detalhes" na dotação desejada para ver o que pode comprar.</div>
-        `;
-    }
-
-    const container = document.getElementById('listaCardsDotacoes');
-    if (!container) return;
-
-    container.innerHTML = filtradas.map(d => {
-        const chips = d.permissoesTags.map(t => `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200">✓ ${t}</span>`).join('');
-        const idCollapse = `collapse-dotacao-${d.ref}`;
-
-        return `
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-3 print-shadow-none">
-                <div class="p-5 border-l-4 ${d.saldo_reserva > 1000 ? 'border-emerald-500' : 'border-rose-400'}">
-                    <div class="flex flex-wrap justify-between items-start gap-4">
-                        <div class="flex-1 space-y-1.5 cursor-pointer" onclick="document.getElementById('${idCollapse}').classList.toggle('hidden')">
-                            <div class="flex flex-wrap items-center gap-2">
-                                ${gerarBadgeRefComPopover(d.ref)}
-                                <span class="text-sm font-extrabold text-slate-900">${d.tituloEmendaCustom || d.acao}</span>
-                            </div>
-                            <p class="text-xs font-semibold text-slate-600">Ação: ${d.acao} • Vínculo: ${d.vinculo_desc}</p>
-                            <div class="flex flex-wrap gap-1.5 pt-1">${chips}</div>
-                        </div>
-                        <div class="text-right bg-slate-50 p-3 rounded-xl border border-slate-200 min-w-[190px]">
-                            <span class="text-[11px] text-slate-500 block">Atualizado: ${formatarBRL(d.atualizado)}</span>
-                            <span class="text-[11px] text-amber-700 font-semibold block">Reservado: ${formatarBRL(d.reservado)}</span>
-                            <span class="text-base font-extrabold ${d.saldo_reserva <= 100 ? 'text-rose-600' : 'text-emerald-600'} mt-1 block border-t border-slate-200 pt-1">Livre: ${formatarBRL(d.saldo_reserva)}</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 flex flex-wrap gap-2 no-print">
-                        <button onclick="document.getElementById('${idCollapse}').classList.toggle('hidden')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-emerald-400"></i> Abrir Detalhes (O que pode / não pode comprar)
-                        </button>
-                        <button onclick="abrirModalEdicao(${d.ref})" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Editar Itens / Adicionar Permissão (Contabilidade)
-                        </button>
-                    </div>
-                </div>
-
-                <div id="${idCollapse}" class="hidden bg-slate-50 border-t border-slate-200 p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg">
-                            <strong class="text-emerald-900 block mb-1 text-xs uppercase">✅ O QUE PODE COMPRAR / PAGAR NESTA DOTAÇÃO:</strong>
-                            <span class="text-emerald-800 leading-relaxed font-medium block">${d.regraPode}</span>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-200 p-3 rounded-lg">
-                            <strong class="text-rose-900 block mb-1 text-xs uppercase">🚫 O QUE NÃO PODE COMPRAR (VEDAÇÃO):</strong>
-                            <span class="text-rose-800 leading-relaxed font-medium block">${d.regraNaoPode}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    if (window.lucide) lucide.createIcons();
-}
-
-function simularCompra() {}
-
-// =========================================================================
-// 8. ABA 3: RENDERIZADOR DE EMENDAS PARLAMENTARES (SEMPRE FECHADO POR PADRÃO)
-// =========================================================================
-function renderizarEmendas() {
-    const dotacoes = obterDotacoesFiltroGlobal();
-    const rawBusca = document.getElementById('inputBuscaEmenda')?.value || '';
-    const busca = normalizarTexto(rawBusca).replace(/\bgase\b/g, 'gaze');
-    const filtroEsfera = document.getElementById('selectFiltroEsferaEmenda')?.value || 'TODAS';
-    const ordenacao = document.getElementById('selectOrdenacaoEmendas')?.value || 'SALDO_DESC';
-
-    const emendas = dotacoes.filter(d => d.ehEmenda);
-    const agrupadas = {};
-
-    emendas.forEach(e => {
-        const info = classificarPermissoesDotacao(e.ref, e.acao, e.modalidade, e.vinculo_desc, e.vinculo_cod);
-        const key = info.tituloEmendaCustom || e.vinculo_desc;
-        if (!agrupadas[key]) {
-            agrupadas[key] = {
-                vinculo: key,
-                numOrdem: e.ref,
-                esfera: String(e.vinculo_cod).startsWith('15007011') || String(e.vinculo_cod).startsWith('2500') ? 'MUNICIPAL' : 'FEDERAL_ESTADUAL',
-                refs: [],
-                totalAtualizado: 0,
-                totalLivre: 0,
-                tagsGlobais: new Set()
-            };
-        }
-        agrupadas[key].refs.push({ ...e, regraPode: info.regraPode, regraNaoPode: info.regraNaoPode, permissoesTags: info.tags, tagsBusca: info.tagsBusca || '' });
-        agrupadas[key].totalAtualizado += e.atualizado;
-        agrupadas[key].totalLivre += e.saldo_reserva;
-        info.tags.forEach(t => agrupadas[key].tagsGlobais.add(t));
-    });
-
-    emendasImpositivas2025.forEach(imp => {
-        const codEsperado = '150070112' + imp.num;
-        const existeNoIPM = dotacoesDB.some(d => String(d.vinculo_cod) === codEsperado);
-        if (!existeNoIPM) {
-            const key = `🏛️ Emenda Impositiva nº ${imp.num} — ${imp.autor} ➔ ${imp.beneficiario} (⚠️ Aguardando Dotação IPM)`;
-            agrupadas[key] = {
-                vinculo: key,
-                numOrdem: parseInt(imp.num, 10) || 999,
-                esfera: 'MUNICIPAL',
-                totalAtualizado: imp.valor,
-                totalLivre: imp.valor,
-                tagsGlobais: new Set([`Vereador(a): ${imp.autor}`, `Destino: ${imp.beneficiario}`, `Natureza: ${imp.natureza}`, `⚠️ Sem Ref no CSV IPM`]),
-                refs: [{
-                    ref: 'Pendente IPM',
-                    acao: `Ação ${imp.acao} (${imp.beneficiario})`,
-                    atualizado: imp.valor,
-                    empenhado: 0,
-                    saldo_reserva: imp.valor,
-                    permissoesTags: [imp.natureza],
-                    regraPode: imp.pode,
-                    regraNaoPode: imp.naoPode,
-                    tagsBusca: `${imp.autor} ${imp.beneficiario} ${imp.pode}`
-                }]
-            };
-        }
-    });
-
-    propostasFNSReais.forEach((p, idxP) => {
-        const key = `🇧🇷 [FNS ${p.ano}] ${p.parlamentar} — ${p.objeto} (Proposta nº ${p.numero})`;
-        agrupadas[key] = {
-            vinculo: key,
-            numOrdem: 1000 + idxP,
-            esfera: 'FNS_PDF',
-            totalAtualizado: p.valor,
-            totalLivre: p.valor,
-            tagsGlobais: new Set([`Ano: ${p.ano}`, p.emenda, p.status, p.natureza]),
-            refs: [{
-                ref: `FNS ${p.ano}`,
-                acao: `${p.objeto} • Natureza: ${p.natureza}`,
-                atualizado: p.valor,
-                empenhado: 0,
-                saldo_reserva: p.valor,
-                permissoesTags: [p.natureza, p.status],
-                regraPode: p.pode,
-                regraNaoPode: p.naoPode,
-                tagsBusca: `${p.parlamentar} ${p.objeto} ${p.pode}`
-            }]
-        };
-    });
-
-    let listaFiltrada = Object.values(agrupadas).filter(g => {
-        const matchEsfera = filtroEsfera === 'TODAS' || g.esfera === filtroEsfera;
-        if (!matchEsfera) return false;
-        if (!busca) return true;
-        const txtGrupo = normalizarTexto(`${g.vinculo} ${Array.from(g.tagsGlobais).join(' ')} ${g.refs.map(r => (r.regraPode || '') + ' ' + r.ref + ' ' + (r.tagsBusca || '')).join(' ')}`).replace(/\bgase\b/g, 'gaze');
-        return txtGrupo.includes(busca);
-    });
-
-    if (ordenacao === 'ALFABETICA') {
-        listaFiltrada.sort((a, b) => a.vinculo.localeCompare(b.vinculo, 'pt-BR'));
-    } else if (ordenacao === 'NUMERICA') {
-        listaFiltrada.sort((a, b) => (a.numOrdem || 999) - (b.numOrdem || 999));
-    } else {
-        listaFiltrada.sort((a, b) => b.totalLivre - a.totalLivre);
-    }
-
-    const container = document.getElementById('containerEmendasAcordeon');
-    if (!container) return;
-
-    container.innerHTML = listaFiltrada.map((grupo, idx) => {
-        const idCollapse = `collapse-emenda-${idx}`;
-        const tagsHTML = Array.from(grupo.tagsGlobais).map(t => `<span class="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded text-[10px] font-bold">${t}</span>`).join('');
-
-        const refsHTML = grupo.refs.map(r => `
-            <div class="flex flex-wrap md:flex-nowrap items-start justify-between gap-4 p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
-                <div class="flex-1 space-y-2">
-                    <div class="flex flex-wrap items-center gap-2">
-                        ${typeof r.ref === 'number' ? gerarBadgeRefComPopover(r.ref) : `<span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-extrabold text-xs">${r.ref}</span>`}
-                        <span class="text-xs font-bold text-slate-800">${r.acao}</span>
-                        ${typeof r.ref === 'number' ? `<button onclick="abrirModalEdicao(${r.ref})" class="ml-auto px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[11px] font-bold flex items-center gap-1 no-print"><i data-lucide="edit-3" class="w-3 h-3"></i> Editar Itens</button>` : ''}
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                        <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-xs">
-                            <strong class="text-emerald-900 block mb-1">✅ O QUE PODE COMPRAR / PAGAR (JUSTIFICATIVA E OBJETO):</strong>
-                            <span class="text-emerald-800 leading-relaxed">${r.regraPode}</span>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-lg text-xs">
-                            <strong class="text-rose-900 block mb-1">🚫 O QUE NÃO PODE COMPRAR (VEDAÇÃO):</strong>
-                            <span class="text-rose-800 leading-relaxed">${r.regraNaoPode}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-right bg-white border border-slate-200 p-2.5 rounded-lg min-w-[175px]">
-                    <span class="text-[11px] text-slate-500 block">Valor: ${formatarBRL(r.atualizado)}</span>
-                    <span class="text-[11px] text-slate-500 block">Empenhado: ${formatarBRL(r.empenhado)}</span>
-                    <span class="text-xs font-extrabold text-emerald-600 mt-1 block border-t border-slate-100 pt-1">Disponível: ${formatarBRL(r.saldo_reserva)}</span>
-                </div>
-            </div>
-        `).join('');
-
-        return `
-            <div class="border border-slate-200 rounded-xl overflow-hidden mb-3 bg-white shadow-sm">
-                <button onclick="document.getElementById('${idCollapse}').classList.toggle('hidden')" class="w-full text-left px-5 py-4 bg-slate-50 hover:bg-slate-100 flex flex-wrap items-center justify-between gap-4 transition">
-                    <div class="flex-1">
-                        <h4 class="font-extrabold text-slate-900 text-sm">${grupo.vinculo}</h4>
-                        <div class="flex flex-wrap gap-1.5 mt-2">${tagsHTML}</div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs text-slate-500 block">Valor Global: ${formatarBRL(grupo.totalAtualizado)}</span>
-                        <span class="text-sm font-extrabold text-amber-600 block">Saldo / Valor: ${formatarBRL(grupo.totalLivre)}</span>
-                    </div>
-                    <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
-                </button>
-                <div id="${idCollapse}" class="hidden bg-white border-t border-slate-200">
-                    <div class="p-2 bg-slate-900 text-white text-[11px] font-bold uppercase text-center tracking-wider">Detalhamento Completo do Plano de Trabalho (O que Pode e Não Pode Comprar)</div>
-                    ${refsHTML}
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    if (window.lucide) lucide.createIcons();
-}
-
-// =========================================================================
-// 9. ABA 4: CONTRATOS E FILA DA TESOURARIA (COM BUSCA E ORDENAÇÃO PADRÃO)
-// =========================================================================
-function filtrarContratos(modo) {
-    filtroSituacaoContratoAtivo = modo;
-    renderizarFixos();
-}
-
-function renderizarFixos() {
-    const tbody = document.getElementById('tabelaFixosBody');
-    if (!tbody) return;
-
-    const busca = normalizarTexto(document.getElementById('inputBuscaContratos')?.value || '');
-    const ordenacao = document.getElementById('selectOrdenacaoContratos')?.value || 'VALOR_DESC';
-
-    let filtrados = contratosCruzadosDB.filter(c => {
-        const matchModo = filtroSituacaoContratoAtivo === 'TODOS'
-            ? true
-            : (filtroSituacaoContratoAtivo === 'VENCENDO' ? c.diasVig <= 45 : c.categoriaStatus === filtroSituacaoContratoAtivo);
-        const matchBusca = !busca || normalizarTexto(`${c.num} ${c.fornecedor} ${c.objeto} ${c.diagnostico} ${c.refs.join(' ')}`).includes(busca);
-        return matchModo && matchBusca;
-    });
-
-    if (ordenacao === 'ALFABETICA') {
-        filtrados.sort((a, b) => a.fornecedor.localeCompare(b.fornecedor, 'pt-BR'));
-    } else if (ordenacao === 'VIGENCIA_ASC') {
-        filtrados.sort((a, b) => a.diasVig - b.diasVig);
-    } else {
-        filtrados.sort((a, b) => b.saldoLiquidar - a.saldoLiquidar);
-    }
-
-    tbody.innerHTML = filtrados.map(c => {
-        const msg = encodeURIComponent(`Olá! Passando pelo setor de Compras/Gestão da Saúde de Imbituba referente ao Contrato *${c.num}* (*${c.fornecedor}*). Verificamos que o *${c.empAberto}* (Ref. ${c.refs.join('/')}) consta com diagnóstico: *${c.diagnostico}*. Consegue verificar para seguirmos com o fluxo?`);
-        const badgeCor = c.categoriaStatus === 'NA_TESOURARIA' ? 'bg-blue-100 text-blue-800 border-blue-300' : (c.categoriaStatus === 'VENCENDO' ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-amber-100 text-amber-800 border-amber-300');
-        const refsHTML = c.refs.map(r => gerarBadgeRefComPopover(r)).join(' ');
-
-        return `
-            <tr class="hover:bg-slate-50">
-                <td class="py-3 px-3">
-                    <div class="font-extrabold text-slate-900">Nº ${c.num}</div>
-                    <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-semibold">${c.especie}</span>
-                </td>
-                <td class="py-3 px-3 max-w-[250px]">
-                    <div class="font-bold text-slate-900">${c.fornecedor}</div>
-                    <div class="text-slate-500 text-[11px] line-clamp-2">${c.objeto}</div>
-                </td>
-                <td class="py-3 px-3 whitespace-nowrap">
-                    <div class="font-bold ${c.diasVig <= 45 ? 'text-rose-600' : 'text-slate-700'}">${c.vigFim}</div>
-                    <span class="text-[10px] ${c.diasVig <= 45 ? 'bg-rose-100 text-rose-700 font-bold px-1.5 py-0.5 rounded' : 'text-slate-400'}">${c.diasVig} dias</span>
-                </td>
-                <td class="py-3 px-3 whitespace-nowrap">
-                    <div class="font-bold text-slate-800 mb-1">${c.empAberto}</div>
-                    <div class="flex flex-wrap gap-1">${refsHTML}</div>
-                </td>
-                <td class="py-3 px-3 text-right font-extrabold text-slate-900 whitespace-nowrap">${formatarBRL(c.saldoLiquidar)}</td>
-                <td class="py-3 px-3 whitespace-nowrap text-[11px]">
-                    <div><span class="text-slate-400">Liq:</span> <strong class="text-slate-800">${c.ultLiq}</strong></div>
-                    <div><span class="text-slate-400">Pag:</span> <span class="text-slate-600">${c.ultPag}</span></div>
-                </td>
-                <td class="py-3 px-3 max-w-[230px]">
-                    <span class="inline-block px-2.5 py-1 rounded-lg border text-[11px] font-bold ${badgeCor}">${c.diagnostico}</span>
-                </td>
-                <td class="py-3 px-3 text-right no-print whitespace-nowrap">
-                    <a href="https://wa.me/55${c.whats}?text=${msg}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg font-semibold text-xs shadow-sm transition">
-                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp
-                    </a>
-                </td>
-            </tr>
-        `;
-    }).join('');
-    if (window.lucide) lucide.createIcons();
-}
-
-// =========================================================================
-// 10. ABA 5: AUDITORIA DE EMPENHOS PARADOS (COM BUSCA E ORDENAÇÃO PADRÃO)
-// =========================================================================
-function sincronizarInputAuditoria(valorDigitado) {
-    const sel = document.getElementById('filtroRefAuditoriaSelect');
-    const limpo = valorDigitado.replace(/\D/g, '');
-    if (sel) {
-        if ([...sel.options].some(o => o.value === limpo)) {
-            sel.value = limpo;
-        } else {
-            sel.value = '';
-        }
-    }
-    renderizarAuditoria();
-}
-
-function selecionarDropdownAuditoria(valorSel) {
-    const inp = document.getElementById('inputBuscaRefAuditoria');
-    if (inp) inp.value = valorSel;
-    renderizarAuditoria();
-}
-
-function limparFiltroAuditoria() {
-    const inp = document.getElementById('inputBuscaRefAuditoria');
-    const sel = document.getElementById('filtroRefAuditoriaSelect');
-    if (inp) inp.value = '';
-    if (sel) sel.value = '';
-    renderizarAuditoria();
-}
-
-function renderizarAuditoria() {
-    const tbody = document.getElementById('tabelaAuditoriaBody');
-    if (!tbody) return;
-
-    const rawInput = document.getElementById('inputBuscaRefAuditoria')?.value.trim() || '';
-    const apenasDigitos = /^\d+$/.test(rawInput);
-    const termoTexto = normalizarTexto(rawInput);
-    const ordenacao = document.getElementById('selectOrdenacaoAuditoria')?.value || 'VALOR_DESC';
-
-    let filtrados = auditoriaParadosDB.filter(r => {
-        if (!rawInput) return true;
-        if (apenasDigitos) return String(r.ref) === rawInput || String(r.emp).includes(rawInput);
-        return normalizarTexto(`${r.credor} ${r.emp} Ref ${r.ref} ${r.acao}`).includes(termoTexto);
-    });
-
-    if (ordenacao === 'ALFABETICA') {
-        filtrados.sort((a, b) => a.credor.localeCompare(b.credor, 'pt-BR'));
-    } else if (ordenacao === 'NUMERICA') {
-        filtrados.sort((a, b) => a.ref - b.ref);
-    } else if (ordenacao === 'DIAS_DESC') {
-        filtrados.sort((a, b) => b.dias - a.dias);
-    } else {
-        filtrados.sort((a, b) => b.saldo - a.saldo);
-    }
-
-    const somaPresa = filtrados.reduce((a, b) => a + b.saldo, 0);
-    const qtdNunca = filtrados.filter(x => x.ultLiq === 'Nunca liq.').length;
-    const qtdParcial = filtrados.filter(x => x.ultLiq !== 'Nunca liq.').length;
-
-    const elVal = document.getElementById('kpiAuditoriaValor');
-    const elSub = document.getElementById('kpiAuditoriaSubValor');
-    const elNun = document.getElementById('kpiAuditoriaNunca');
-    const elPar = document.getElementById('kpiAuditoriaParcial');
-
-    if (elVal) elVal.textContent = formatarBRL(somaPresa);
-    if (elSub) elSub.textContent = rawInput
-        ? `Filtro ativo: "${rawInput}" (${filtrados.length} empenhos encontrados)`
-        : `Exibindo todos os ${filtrados.length} empenhos auditados`;
-    if (elNun) elNun.textContent = `${qtdNunca} empenho(s)`;
-    if (elPar) elPar.textContent = `${qtdParcial} empenho(s)`;
-
-    if (filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500 font-semibold">Nenhum empenho parado encontrado para "${rawInput}". Clique em "Ver Todas".</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = filtrados.map(r => `
-        <tr class="hover:bg-slate-50">
-            <td class="py-3 px-3 whitespace-nowrap">
-                <div class="font-extrabold text-slate-900">Emp. ${r.emp}</div>
-                <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold">${r.especie}</span>
-            </td>
-            <td class="py-3 px-3 whitespace-nowrap">
-                ${gerarBadgeRefComPopover(r.ref)}
-            </td>
-            <td class="py-3 px-3 font-bold text-slate-800">${r.credor}</td>
-            <td class="py-3 px-3 text-slate-600 text-[11px] whitespace-nowrap">
-                <div>Emissão: <strong>${r.emissao}</strong></div>
-                <div>Últ. Liq: <strong class="${r.ultLiq === 'Nunca liq.' ? 'text-rose-600' : 'text-amber-700'}">${r.ultLiq}</strong> (${r.dias}d)</div>
-            </td>
-            <td class="py-3 px-3 text-right font-semibold text-slate-600 whitespace-nowrap">${formatarBRL(r.empenhadoTotal || r.saldo)}</td>
-            <td class="py-3 px-3 text-right font-extrabold text-rose-600 text-sm whitespace-nowrap">${formatarBRL(r.saldo)}</td>
-            <td class="py-3 px-3 text-slate-700 font-medium">
-                <span class="inline-block px-2.5 py-1 bg-rose-50 border border-rose-200 rounded-lg text-rose-900 font-semibold">${r.acao}</span>
-            </td>
-        </tr>
-    `).join('');
-    if (window.lucide) lucide.createIcons();
-}
-
-// =========================================================================
-// 11. ABA 6: LEITORES SEMANAIS IPM + RADAR FNS
-// =========================================================================
-async function processarCSVSaldoDotacaoReal(input) {
-    if (!input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const linhas = e.target.result.split(/\r?\n/);
-        const novas = [];
-        let acaoAtual = '', vincDescAtual = '';
-        for (let l of linhas) {
-            if (!l.trim()) continue;
-            const cols = l.split(';').map(c => c.replace(/^"|"$/g, '').trim());
-            if (cols[0] === 'Resumo por Vínculo') break;
-            if (cols[0].startsWith('Ação:')) acaoAtual = cols[0].replace('Ação:', '').trim();
-            else if (cols[0].startsWith('Vínculo')) vincDescAtual = cols[0].replace(/^Vínculo\s*:\s*/, '').trim();
-            else if (/^\d+$/.test(cols[0]) && cols.length >= 10) {
-                const orc = brToFloat(cols[3]), atu = brToFloat(cols[4]);
-                if (orc > 0 || atu > 0) {
-                    novas.push({
-                        ref: parseInt(cols[0], 10),
-                        acao: acaoAtual,
-                        acao_num: acaoAtual.split(' - ')[0].trim(),
-                        modalidade: cols[1],
-                        mod_cod: cols[1].split(' - ')[0].trim(),
-                        vinculo_cod: cols[2],
-                        vinculo_desc: vincDescAtual,
-                        orcado: orc,
-                        atualizado: atu,
-                        empenhado: brToFloat(cols[6]),
-                        reservado: brToFloat(cols[7]),
-                        saldo_empenho: brToFloat(cols[8]),
-                        saldo_reserva: brToFloat(cols[9])
-                    });
-                }
-            }
-        }
-        if (novas.length > 0) {
-            const agora = new Date().toLocaleString('pt-BR');
-            localStorage.setItem(STORAGE_KEYS.DOTACOES, JSON.stringify(novas));
-            localStorage.setItem(STORAGE_KEYS.ULTIMA_ATUALIZACAO, agora);
-
-            let msgSupa = 'Salvo no navegador (LocalStorage)';
-            if (supabaseAtivo) {
-                const { error } = await supabase.from('dotacoes_orcamentarias').upsert(novas, { onConflict: 'ref' });
-                if (!error) msgSupa = 'Salvo no Banco de Dados Nuvem (Supabase) e no Navegador';
-            }
-
-            construirBaseDotacoes(novas);
-            popularFiltrosGlobais();
-            renderizarTudo();
-            document.getElementById('badgeStatusTopo').textContent = `💾 Atualizado em ${agora}`;
-            document.getElementById('logImportacao').innerHTML += `<div>[OK - ${agora}] Saldo Dotacao.csv carregado (${novas.length} Refs) -> ${msgSupa}!</div>`;
-        }
-    };
-    reader.readAsText(input.files[0], 'ISO-8859-1');
-}
-
-async function processarCSVEmpenhosLiquidarReal(input) {
-    if (!input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const linhas = e.target.result.split(/\r?\n/);
-        const novos = [];
-        for (let i = 1; i < linhas.length; i++) {
-            const cols = linhas[i].split(';').map(c => c.replace(/^"|"$/g, '').trim());
-            if (cols.length >= 9 && cols[0] && !cols[0].startsWith('Total')) {
-                const empTot = brToFloat(cols[6]);
-                const liqTot = brToFloat(cols[7]);
-                const saldoLiq = brToFloat(cols[8]);
-                const partesDot = cols[2].split('.');
-                const acaoNum = partesDot[5] || '';
-                const modCod = partesDot[6] || '';
-                const vincCod = cols[3];
-                const dotMatch = dotacoesDB.find(d => d.acao.startsWith(acaoNum) && d.modalidade.startsWith(modCod) && d.vinculo_cod === vincCod);
-                const refNum = dotMatch ? dotMatch.ref : parseInt(acaoNum || '0', 10);
-
-                novos.push({
-                    emp: cols[0],
-                    especie: cols[1],
-                    ref: refNum,
-                    credor: cols[5],
-                    emissao: cols[4],
-                    ultLiq: liqTot === 0 ? 'Nunca liq.' : 'Parcial',
-                    empenhadoTotal: empTot,
-                    saldo: saldoLiq,
-                    dias: 60,
-                    acao: liqTot === 0
-                        ? `🚨 Nunca teve liquidação (R$ 0,00 liquidado de ${formatarBRL(empTot)}). Cobrar entrega/NF ou estornar para liberar ${formatarBRL(saldoLiq)} na Ref. ${refNum}!`
-                        : `⏳ Liquidado parcialmente (${formatarBRL(liqTot)}). Restam ${formatarBRL(saldoLiq)} presos na Ref. ${refNum}.`
-                });
-            }
-        }
-        if (novos.length > 0) {
-            const agora = new Date().toLocaleString('pt-BR');
-            auditoriaParadosDB = novos.sort((a, b) => b.saldo - a.saldo);
-            localStorage.setItem(STORAGE_KEYS.AUDITORIA, JSON.stringify(auditoriaParadosDB));
-            localStorage.setItem(STORAGE_KEYS.ULTIMA_ATUALIZACAO, agora);
-
-            let msgSupa = 'Salvo no navegador (LocalStorage)';
-            if (supabaseAtivo) {
-                const payloadSupa = auditoriaParadosDB.map(a => ({
-                    emp: a.emp, especie: a.especie, ref: a.ref || null, credor: a.credor,
-                    emissao: a.emissao, ult_liq: a.ultLiq, empenhado_total: a.empenhadoTotal,
-                    saldo: a.saldo, dias: a.dias, acao: a.acao
-                }));
-                const { error } = await supabase.from('auditoria_empenhos_parados').upsert(payloadSupa, { onConflict: 'emp' });
-                if (!error) msgSupa = 'Salvo no Supabase e no Navegador';
-            }
-
-            popularFiltrosGlobais();
-            renderizarTudo();
-            document.getElementById('badgeStatusTopo').textContent = `💾 Atualizado em ${agora}`;
-            document.getElementById('logImportacao').innerHTML += `<div>[OK - ${agora}] Empenhos Liquidar.csv (${novos.length} empenhos) -> ${msgSupa}!</div>`;
-        }
-    };
-    reader.readAsText(input.files[0], 'ISO-8859-1');
-}
-
-function processarJSONContratosReal(input) {
-    if (!input.files || !input.files[0]) return;
-    const agora = new Date().toLocaleString('pt-BR');
-    localStorage.setItem(STORAGE_KEYS.ULTIMA_ATUALIZACAO, agora);
-    document.getElementById('logImportacao').innerHTML += `<div>[OK - ${agora}] Relatorio (3).json sincronizado e salvo!</div>`;
-}
-
-async function sincronizarFNSAutomatico() {
-    const btn = document.getElementById('btnSyncFNS');
-    const log = document.getElementById('logImportacao');
-    if (!btn || !log) return;
-
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Sincronizando 24 Propostas FNS + 65 Impositivas...`;
-    btn.classList.add('opacity-70', 'cursor-not-allowed');
-
-    setTimeout(() => {
-        const somaFNS = propostasFNSReais.reduce((a, b) => a + b.valor, 0);
-        let tabelaFNS = `<div class="mt-4 mb-4 bg-slate-800 border border-emerald-500/50 rounded-lg overflow-hidden shadow-lg">
-            <div class="bg-emerald-900/50 px-4 py-3 border-b border-emerald-500/30 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="satellite" class="w-5 h-5 text-emerald-400"></i>
-                    <span class="font-extrabold text-emerald-400 text-sm">Radar FNS (24 Propostas = ${formatarBRL(somaFNS)}) + 65 Emendas Impositivas Mapeadas</span>
-                </div>
-            </div>
-            <div class="overflow-x-auto max-h-[460px]">
-                <table class="w-full text-left text-xs text-slate-300">
-                    <thead class="bg-slate-900 text-slate-400 uppercase sticky top-0">
-                        <tr>
-                            <th class="py-2.5 px-3">Ano / Proposta</th>
-                            <th class="py-2.5 px-3">Emenda / Origem</th>
-                            <th class="py-2.5 px-3">Objeto & O Que Pode Comprar</th>
-                            <th class="py-2.5 px-3 text-right">Valor (R$)</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-700/50">
-                        ${propostasFNSReais.map(p => `
-                            <tr class="hover:bg-slate-700/30 transition">
-                                <td class="py-3 px-3 font-bold text-slate-200 whitespace-nowrap">${p.ano}<div class="text-[10px] text-slate-400 font-mono">${p.numero}</div></td>
-                                <td class="py-3 px-3 font-bold text-amber-300 whitespace-nowrap">${p.emenda}<div class="text-[10px] text-emerald-400">${p.natureza}</div></td>
-                                <td class="py-3 px-3 text-white">
-                                    <div class="font-bold">${p.objeto}</div>
-                                    <div class="text-[11px] text-emerald-300 mt-0.5"><strong>✅ Pode:</strong> ${p.pode}</div>
-                                    <div class="text-[11px] text-rose-300 mt-0.5"><strong>🚫 Vedado:</strong> ${p.naoPode}</div>
-                                </td>
-                                <td class="py-3 px-3 text-right font-extrabold text-emerald-400 whitespace-nowrap">${formatarBRL(p.valor)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>`;
-
-        log.innerHTML = `<div class="text-emerald-300 font-bold mb-2">[FNS SYNC - ${new Date().toLocaleTimeString('pt-BR')}] 24 propostas federais e 65 emendas impositivas sincronizadas!</div>` + tabelaFNS + log.innerHTML;
-        btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4"></i> Sincronizar Portal FNS (Governo Federal)`;
-        btn.classList.remove('opacity-70', 'cursor-not-allowed');
-        if (window.lucide) lucide.createIcons();
-    }, 800);
-}
-
-// =========================================================================
-// 12. MODAL DE EDIÇÃO DE REGRAS PELA CONTADORA (LOCALSTORAGE + SUPABASE)
-// =========================================================================
-function abrirModalEdicao(refNum) {
-    const d = dotacoesDB.find(x => x.ref === refNum);
-    if (!d) return;
-
-    document.getElementById('modalRefHidden').value = refNum;
-    document.getElementById('modalEdicaoTitulo').textContent = `Ref. ${refNum} — Editar Itens Permitidos (${d.tituloEmendaCustom || d.vinculo_desc})`;
-    document.getElementById('modalInputPode').value = d.regraCustomPode || '';
-    document.getElementById('modalInputNaoPode').value = d.regraCustomNaoPode || '';
-    document.getElementById('modalEdicaoRegras').classList.remove('hidden');
-}
-
-function fecharModalEdicao() {
-    document.getElementById('modalEdicaoRegras').classList.add('hidden');
-}
-
-async function salvarModalEdicao() {
-    const refNum = parseInt(document.getElementById('modalRefHidden').value, 10);
-    const txtPode = document.getElementById('modalInputPode').value.trim();
-    const txtNaoPode = document.getElementById('modalInputNaoPode').value.trim();
-
-    if (!customRulesDB) customRulesDB = {};
-    customRulesDB[refNum] = { pode: txtPode, naoPode: txtNaoPode };
-
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_RULES, JSON.stringify(customRulesDB));
-
-    if (supabaseAtivo) {
-        try {
-            await supabase
-                .from('dotacoes_orcamentarias')
-                .update({
-                    regra_custom_pode: txtPode,
-                    regra_custom_nao_pode: txtNaoPode
-                })
-                .eq('ref', refNum);
-        } catch (err) {
-            console.warn('Aviso ao gravar regra customizada no Supabase:', err);
-        }
-    }
-
-    construirBaseDotacoes(dotacoesDB);
-    renderizarTudo();
-    fecharModalEdicao();
-}
-
-// =========================================================================
-// 13. EXPORTAÇÃO PDF / CSV E INICIALIZAÇÃO GLOBAL
-// =========================================================================
-function gerarPDFRelatorio() {
-    const cab = document.getElementById('cabecalhoPDF');
-    document.getElementById('dataHoraPDF').textContent = new Date().toLocaleString('pt-BR');
-    document.getElementById('blocoSelecionadoPDF').textContent = document.getElementById('filtroBlocoGlobal').value;
-    cab.classList.remove('hidden');
-    html2pdf().set({
-        margin: [8, 8, 8, 8],
-        filename: `BI_Saude_Imbituba_${new Date().toISOString().slice(0, 10)}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    }).from(document.getElementById('areaRelatorioPDF')).save().then(() => cab.classList.add('hidden'));
-}
-
-function exportarCSVTelaAtual() {
-    const abaAtiva = document.querySelector('.tab-content.active');
-    const tabela = abaAtiva ? abaAtiva.querySelector('table') : null;
-    if (!tabela) { alert('Para exportar os cards visuais desta aba, utilize o botão Relatório PDF.'); return; }
-    const csv = Array.from(tabela.querySelectorAll('tr')).map(tr =>
-        Array.from(tr.querySelectorAll('th, td')).map(td => `"${td.innerText.replace(/\n/g, ' ').trim()}"`).join(';')
-    );
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' }));
-    a.download = `FMS_Imbituba_${abaAtiva.id}.csv`;
-    a.click();
-}
-
-function renderizarTudo() {
-    const filtradas = obterDotacoesFiltroGlobal();
-    atualizarGraficoMensal();
-    renderizarGraficos(filtradas);
-    renderizarResumoExecutivo(filtradas);
-    filtrarAbaDotacoes();
-    renderizarEmendas();
-    renderizarFixos();
-    renderizarAuditoria();
-    if (window.lucide) lucide.createIcons();
-}
-
-Object.assign(window, {
-    trocarAba,
-    drillDownOrcamento,
-    drillDownTesouraria,
-    drillDownAuditoria,
-    drillDownEmendas,
-    atualizarGraficoMensal,
-    selecionarChipPermissao,
-    limparBuscaPermissao,
-    filtrarAbaDotacoes,
-    simularCompra,
-    renderizarEmendas,
-    filtrarContratos,
-    renderizarFixos,
-    sincronizarInputAuditoria,
-    selecionarDropdownAuditoria,
-    limparFiltroAuditoria,
-    renderizarAuditoria,
-    processarCSVSaldoDotacaoReal,
-    processarCSVEmpenhosLiquidarReal,
-    processarJSONContratosReal,
-    baixarArquivoDadosIniciaisAtualizado,
-    limparCacheNavegadorVoltarOriginal,
-    gerarPDFRelatorio,
-    exportarCSVTelaAtual,
-    sincronizarFNSAutomatico,
-    abrirModalEdicao,
-    fecharModalEdicao,
-    salvarModalEdicao,
-    renderizarTudo
-});
-
-window.addEventListener('DOMContentLoaded', () => {
-    inicializarBancoDeDados();
-    const filtroBloco = document.getElementById('filtroBlocoGlobal');
-    const filtroDotacao = document.getElementById('filtroDotacaoGlobal');
-    if (filtroBloco) filtroBloco.addEventListener('change', renderizarTudo);
-    if (filtroDotacao) filtroDotacao.addEventListener('change', renderizarTudo);
-});
+            <div class
