@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <!-- MENU DE NAVEGAÇÃO (6 ABAS - SINCRONIZADOR IPM POR ÚLTIMO) -->
+        <!-- MENU DE NAVEGAÇÃO (6 ABAS) -->
         <div class="bg-slate-950/60 border-t border-slate-800">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-1 py-1.5">
                 <button id="btn-aba-dashboard" onclick="trocarAba('aba-dashboard', this)" class="tab-btn active px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 border-b-2 border-transparent whitespace-nowrap">
@@ -183,14 +183,21 @@
                 </div>
             </div>
 
-            <!-- Tabela Executiva com Popover -->
+            <!-- Tabela Executiva com Popover e Ordenação Padrão -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden print-shadow-none">
                 <div class="px-5 py-3.5 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 bg-slate-50">
                     <div>
                         <h3 class="font-bold text-sm text-slate-800">Quadro Sintético das Dotações Reais (Refs)</h3>
                         <p class="text-xs text-slate-500">💡 <strong>Passe o mouse sobre o botão azul <code>Ref. XX</code></strong> para abrir a caixinha explicando do que é a dotação, vínculo e o que pode pagar nela.</p>
                     </div>
-                    <span class="text-xs font-semibold text-emerald-700" id="contadorRefsTabela">Exibindo 209 dotações</span>
+                    <div class="flex flex-wrap items-center gap-2 no-print">
+                        <select id="selectOrdenacaoAba1" onchange="renderizarTudo()" class="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
+                            <option value="NUMERICA">🔢 Ordem Numérica (Ref)</option>
+                            <option value="SALDO_DESC">⬇️ Maior Saldo Livre</option>
+                            <option value="ALFABETICA">🔤 Ordem Alfabética (A-Z)</option>
+                        </select>
+                        <span class="text-xs font-semibold text-emerald-700" id="contadorRefsTabela">Exibindo 209 dotações</span>
+                    </div>
                 </div>
                 <div class="overflow-x-auto max-h-[480px]">
                     <table class="w-full text-left text-xs">
@@ -217,9 +224,9 @@
             <div class="bg-white p-5 rounded-xl border-2 border-blue-600/30 shadow-md space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                        <span class="text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Motor de Busca Reversa por Permissão</span>
-                        <h3 class="font-extrabold text-base text-slate-900 mt-1">Precisa pagar ou comprar algo? Pesquise pela sua necessidade:</h3>
-                        <p class="text-xs text-slate-500">Digite ex: <em>transporte, tfd, samu, aluguel, tecnologia, hospital, apae, amai, medicamento, bucal, veículo, obra, consórcio</em> ou clique nos filtros rápidos abaixo.</p>
+                        <span class="text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Motor de Busca Reversa por Permissão (SUS + Planilhas + Contabilidade)</span>
+                        <h3 class="font-extrabold text-base text-slate-900 mt-1">Precisa pagar ou comprar algo? Pesquise pelo item ou necessidade:</h3>
+                        <p class="text-xs text-slate-500">Digite ex: <em>gaze, gase, seringa, fralda, cadeira, ar-condicionado, computador, transporte, tfd, samu, aluguel, tecnologia, hospital, apae, amai, bucal, veículo, obra, consórcio</em>.</p>
                     </div>
                     <button onclick="limparBuscaPermissao()" class="text-xs text-blue-600 hover:underline font-semibold no-print">Limpar e mostrar todas</button>
                 </div>
@@ -227,13 +234,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 no-print">
                     <div class="md:col-span-3 relative">
                         <input type="text" id="inputBuscaNecessidade" oninput="filtrarAbaDotacoes()" 
-                            placeholder="Ex: Digite 'transporte', 'aluguel', 'tecnologia', 'samu', 'bucal', 'Julia Zanatta', '91'..." 
+                            placeholder="Ex: Digite 'gaze', 'gase', 'seringa', 'ar-condicionado', 'transporte', 'aluguel', 'Julia Zanatta', '91'..." 
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none">
                         <i data-lucide="search" class="w-5 h-5 text-blue-600 absolute left-3 top-2.5"></i>
                     </div>
                     <div>
                         <select id="selectApenasComSaldo" onchange="filtrarAbaDotacoes()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 mb-2">
-                            <option value="COM_SALDO">🟢 Apenas c/ Saldo (> R$ 100)</option>
+                            <option value="COM_SALDO">🟢 Apenas c/ Saldo (&gt; R$ 100)</option>
                             <option value="TODAS">Mostrar Todas (Inclus. Zeradas)</option>
                         </select>
                         <select id="selectOrdenacaoAba2" onchange="filtrarAbaDotacoes()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
@@ -247,9 +254,9 @@
                 <div class="flex flex-wrap items-center gap-2 pt-1 no-print" id="containerChipsPermissao">
                     <button onclick="selecionarChipPermissao('TODOS', this)" class="chip-permissao active text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-slate-100 text-slate-700">Todas</button>
                     <button onclick="selecionarChipPermissao('Transporte / TFD / SAMU', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🚌 Transporte / TFD / SAMU</button>
-                    <button onclick="selecionarChipPermissao('Custeio / Aluguel / Serviços PJ', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🏢 Custeio / Aluguel / Serviços (33390)</button>
+                    <button onclick="selecionarChipPermissao('Custeio / Serviços PJ (33390)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🏢 Custeio / Aluguel / Consumo (33390)</button>
                     <button onclick="selecionarChipPermissao('Tecnologia / SUS Digital', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">💻 Tecnologia / SUS Digital (2121)</button>
-                    <button onclick="selecionarChipPermissao('Hospital / Entidades (33350)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🏥 Hospital / APAE / AMAI (33350)</button>
+                    <button onclick="selecionarChipPermissao('Hospital / Entidades (33350)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🏥 Hospital / APAE / AMAI (33350/4450)</button>
                     <button onclick="selecionarChipPermissao('Consórcio Público (33371)', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🤝 Consórcio CISAMUREL (33371)</button>
                     <button onclick="selecionarChipPermissao('Medicamentos / Farmácia', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">💊 Farmácia & Insumos (2089/2090)</button>
                     <button onclick="selecionarChipPermissao('Saúde Bucal', this)" class="chip-permissao text-xs px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700">🦷 Saúde Bucal (2076)</button>
@@ -257,10 +264,6 @@
                 </div>
 
                 <div id="resumoBuscaNecessidade" class="hidden p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex flex-wrap items-center justify-between gap-2"></div>
-            </div>
-
-            
-                <div id="resultadoSimulador" class="hidden mt-4 p-3 rounded-lg text-xs font-medium"></div>
             </div>
 
             <div id="listaCardsDotacoes" class="grid grid-cols-1 gap-4"></div>
@@ -277,12 +280,19 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2 no-print">
                         <div class="relative">
-                            <input type="text" id="inputBuscaEmenda" oninput="renderizarEmendas()" placeholder="Buscar deputado, item ou Ref..." class="w-64 pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <input type="text" id="inputBuscaEmenda" oninput="renderizarEmendas()" placeholder="Buscar deputado, vereador, item..." class="w-64 pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-500">
                             <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
                         </div>
+                        <select id="selectFiltroEsferaEmenda" onchange="renderizarEmendas()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
+                            <option value="TODAS">🌐 Todas as Esferas</option>
+                            <option value="MUNICIPAL">🏛️ Emendas Municipais (Vereadores)</option>
+                            <option value="FEDERAL_ESTADUAL">🇧🇷 Federais / Estaduais (No IPM)</option>
+                            <option value="FNS_PDF">🛰️ Propostas Portal FNS (Extratos)</option>
+                        </select>
                         <select id="selectOrdenacaoEmendas" onchange="renderizarEmendas()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
                             <option value="SALDO_DESC">⬇️ Maior Saldo Livre</option>
-                            <option value="ALFABETICA">🔤 Ordem Alfabética</option>
+                            <option value="ALFABETICA">🔤 Ordem Alfabética (A-Z)</option>
+                            <option value="NUMERICA">🔢 Ordem Numérica</option>
                         </select>
                     </div>
                 </div>
@@ -301,6 +311,14 @@
                     <button onclick="filtrarContratos('COBRAR_FISCAL')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200">🚨 Pendentes c/ Fiscal (Cobrar NF)</button>
                     <button onclick="filtrarContratos('NA_TESOURARIA')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-900 hover:bg-blue-200">🏦 Na Tesouraria (Já Liquidados: R$ 648,3 mil)</button>
                     <button onclick="filtrarContratos('VENCENDO')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-100 text-rose-900 hover:bg-rose-200">⏰ Contratos Vencendo (&lt; 45 dias)</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="text" id="inputBuscaContratos" oninput="renderizarFixos()" placeholder="Buscar fornecedor ou contrato..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs bg-slate-50">
+                    <select id="selectOrdenacaoContratos" onchange="renderizarFixos()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
+                        <option value="VALOR_DESC">⬇️ Maior Saldo</option>
+                        <option value="VIGENCIA_ASC">⏰ Menor Prazo Vigência</option>
+                        <option value="ALFABETICA">🔤 Fornecedor (A-Z)</option>
+                    </select>
                 </div>
             </div>
 
@@ -342,15 +360,15 @@
                     </div>
                     
                     <div class="bg-slate-900 text-white p-3.5 rounded-xl border border-slate-700 space-y-2 no-print min-w-[320px]">
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-400">Auditar Dotação Específica ou Todas:</label>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-emerald-400">Auditar Dotação, Credor ou Ordenar:</label>
                         <div class="flex items-center gap-2">
                             <div class="relative flex-1">
                                 <input type="text" id="inputBuscaRefAuditoria" 
                                     oninput="sincronizarInputAuditoria(this.value)" 
                                     onkeydown="if(event.key==='Enter'){ event.preventDefault(); renderizarAuditoria(); }"
-                                    placeholder="Digite a Ref (ex: 91, 71)..." 
+                                    placeholder="Digite Ref (ex: 91) ou Fornecedor..." 
                                     class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-8 pr-2 py-1.5 text-xs font-bold text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                                <i data-lucide="hash" class="w-3.5 h-3.5 text-emerald-400 absolute left-2.5 top-2"></i>
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-emerald-400 absolute left-2.5 top-2"></i>
                             </div>
                             <button onclick="limparFiltroAuditoria()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition">
                                 Ver Todas
@@ -358,6 +376,12 @@
                         </div>
                         <select id="filtroRefAuditoriaSelect" onchange="selecionarDropdownAuditoria(this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200 cursor-pointer">
                             <option value="">📋 Lista com todas as Dotações Auditadas (109 empenhos)</option>
+                        </select>
+                        <select id="selectOrdenacaoAuditoria" onchange="renderizarAuditoria()" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300 cursor-pointer">
+                            <option value="VALOR_DESC">⬇️ Ordenar: Maior Valor Preso</option>
+                            <option value="DIAS_DESC">⏳ Ordenar: Mais Dias Parado</option>
+                            <option value="ALFABETICA">🔤 Ordenar: Ordem Alfabética (Empresa)</option>
+                            <option value="NUMERICA">🔢 Ordenar: Número da Ref.</option>
                         </select>
                     </div>
                 </div>
@@ -450,7 +474,6 @@
 
     </main>
 
-    
     <!-- MODAL DE EDIÇÃO DE REGRAS DE DOTAÇÃO -->
     <div id="modalEdicaoRegras" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
@@ -461,7 +484,7 @@
             <div class="p-5 space-y-4">
                 <input type="hidden" id="modalRefHidden">
                 <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-xs text-blue-800 mb-2">
-                    <strong>Dica:</strong> Os itens digitados aqui ficarão salvos e poderão ser buscados (Ex: "gaze", "dipirona", "computador"). O sistema unirá essa regra às regras padrões do SUS.
+                    <strong>Dica:</strong> Os itens digitados aqui ficarão salvos no navegador e na nuvem (Supabase) e poderão ser buscados (Ex: "gaze", "gase", "dipirona", "computador").
                 </div>
                 <div>
                     <label class="block text-xs font-extrabold text-emerald-700 mb-1">✅ O que PODE comprar (Itens, Serviços, Materiais):</label>
@@ -478,9 +501,8 @@
             </div>
         </div>
     </div>
-    
-    <!-- Módulo Principal ES6 -->
 
+    <!-- Módulo Principal ES6 -->
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
