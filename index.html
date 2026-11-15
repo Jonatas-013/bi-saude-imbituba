@@ -106,8 +106,9 @@
             </div>
         </div>
 
-        <!-- ABA 1: VISÃO EXECUTIVA -->
+        <!-- ABA 1: VISÃO EXECUTIVA (PAINEL ESTRATÉGICO DE GRÁFICOS) -->
         <section id="aba-dashboard" class="tab-content active space-y-6">
+            <!-- 4 KPIs Superiores -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div onclick="drillDownOrcamento()" class="kpi-card bg-white p-4 rounded-xl border-l-4 border-slate-900 border border-slate-200 shadow-sm">
                     <div class="flex justify-between items-start">
@@ -146,75 +147,71 @@
                 </div>
             </div>
 
-            <!-- GRÁFICO BI 1: EVOLUÇÃO MENSAL + SIMULAÇÃO -->
+            <!-- GRÁFICO ESTRATÉGICO 1: RAIO-X COMPLETO DAS EMENDAS PARLAMENTARES (ESFERAS + EXPANSÃO POR PARLAMENTAR) -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none space-y-4">
-                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-3">
+                <div class="flex flex-wrap justify-between items-start gap-4 border-b border-slate-100 pb-3">
                     <div>
-                        <span class="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Série Histórica Real IPM + Projeção</span>
-                        <h3 class="font-extrabold text-slate-900 text-sm mt-1">Evolução Mensal da Execução (Jan a Nov/2026) & Simulação de Fechamento (Dez/2026)</h3>
-                        <p class="text-xs text-slate-500">Média mensal liquidada (Jan–Out): <strong>R$ 6.058.631,58/mês</strong>. Ajuste o ritmo projetado para Nov/Dez ao lado:</p>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">Inteligência de Emendas (Municipal vs. Estadual vs. União)</span>
+                        <h3 class="font-extrabold text-slate-900 text-base mt-1">Execução de Emendas Parlamentares: Total Ativo, Empenhado, Saldo Livre e A Entrar (Em Liberação)</h3>
+                        <p class="text-xs text-slate-500">Visualize quanto veio dos <strong>Vereadores (Impositivas)</strong>, do <strong>Estado (SC)</strong> e da <strong>União (Deputados/MS)</strong>, ou expanda para ver cada parlamentar.</p>
                     </div>
-                    <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl no-print">
-                        <label class="text-xs font-bold text-slate-700">Simular Ritmo Nov/Dez:</label>
-                        <select id="selectSimulacaoMensal" onchange="atualizarGraficoMensal()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900">
-                            <option value="1.0">Cenário Base (100% da média = R$ 6,05 Mi/mês)</option>
-                            <option value="1.2">Cenário Acelerado (+20% fim de ano = R$ 7,27 Mi/mês)</option>
-                            <option value="0.85">Cenário Contenção (-15% economia = R$ 5,15 Mi/mês)</option>
-                        </select>
+                    <div class="flex flex-wrap items-center gap-2 no-print">
+                        <button id="btnAlternarVisaoEmendasBI" onclick="alternarVisaoGraficoEmendas()" class="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="Maximize-2" class="w-3.5 h-3.5 text-amber-400"></i> Ver Todas por Parlamentar / Autor
+                        </button>
                     </div>
                 </div>
-                <div class="h-72">
-                    <canvas id="chartEvolucaoMensal"></canvas>
+
+                <!-- Mini-cards de resumo das 4 métricas de Emendas -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="kpisResumoEmendasGrafico"></div>
+
+                <div id="wrapperGraficoEmendas" class="h-72 transition-all duration-300">
+                    <canvas id="chartEmendasBI"></canvas>
                 </div>
             </div>
 
-            <!-- GRÁFICOS BI 2 E 3 -->
+            <!-- GRÁFICO ESTRATÉGICO 2: ORÇAMENTO POR CATEGORIA DE GASTO (COMBUSTÍVEL, MEDICAMENTOS, PERMANENTE, ETC.) -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none space-y-4">
+                <div class="flex flex-wrap justify-between items-start gap-4 border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Capacidade de Compra por Finalidade</span>
+                        <h3 class="font-extrabold text-slate-900 text-base mt-1">Orçamento por Categoria de Gasto (Total das Dotações vs. Empenhado vs. Saldo Disponível)</h3>
+                        <p class="text-xs text-slate-500">Quanto temos orçado, empenhado e livre para <strong>Combustível & Frota, Medicamentos, Material Permanente, Consórcio, Entidades, Reformas e TI</strong>. Clique em uma barra para filtrar a Aba 2!</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 no-print">
+                        <select id="selectFiltroCategoriaBI" onchange="renderizarGraficoCategoriasBI()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700">
+                            <option value="SEM_FOLHA">Ocultar Folha RH (Focar em Compras/Serviços)</option>
+                            <option value="COM_FOLHA">Incluir Folha de Pagamento (RH)</option>
+                        </select>
+                        <button id="btnExpandirCategoriasBI" onclick="alternarExpansaoCategoriasBI()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="list-plus" class="w-3.5 h-3.5"></i> Mostrar Todas as 10 Categorias
+                        </button>
+                    </div>
+                </div>
+
+                <div id="wrapperGraficoCategorias" class="h-72 transition-all duration-300">
+                    <canvas id="chartCategoriasBI"></canvas>
+                </div>
+            </div>
+
+            <!-- GRÁFICOS 3 E 4: ORIGEM DOS RECURSOS (PRÓPRIO VS VINCULADO) + FUNIL FINANCEIRO -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none">
-                    <h3 class="font-bold text-slate-900 text-sm">Execução por Ação Orçamentária (Empenhado vs. Reservado vs. Livre)</h3>
-                    <p class="text-xs text-slate-500 mb-3">Comparativo direto de fôlego financeiro por programa da Saúde</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Economia de Recurso Próprio</span>
+                            <h3 class="font-bold text-slate-900 text-sm mt-1">Execução por Fonte: Impostos Próprios (15%) vs. SUS União/Estado vs. Emendas</h3>
+                            <p class="text-xs text-slate-500">Priorize gastar o Saldo Livre das Transferências SUS e Emendas para preservar o Caixa Próprio do Município</p>
+                        </div>
+                    </div>
                     <div class="h-64"><canvas id="chartFontes"></canvas></div>
                 </div>
 
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print-shadow-none">
-                    <h3 class="font-bold text-slate-900 text-sm">Funil Financeiro Global de 2026 (R$ 97,04 Milhões)</h3>
-                    <p class="text-xs text-slate-500 mb-3">Clique nas fatias ou nos cards acima para abrir os empenhos de cada etapa</p>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-800 px-2 py-0.5 rounded">Visão Geral da Execução</span>
+                    <h3 class="font-bold text-slate-900 text-sm mt-1">Funil Financeiro Global de 2026 (R$ 97,04 Milhões)</h3>
+                    <p class="text-xs text-slate-500 mb-3">Proporção entre Pago, Na Tesouraria, Empenhos Parados (+60d), Reservado e Saldo Livre Real</p>
                     <div class="h-64 flex justify-center"><canvas id="chartBlocos"></canvas></div>
-                </div>
-            </div>
-
-            <!-- Tabela Executiva com Popover e Ordenação Padrão -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden print-shadow-none">
-                <div class="px-5 py-3.5 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 bg-slate-50">
-                    <div>
-                        <h3 class="font-bold text-sm text-slate-800">Quadro Sintético das Dotações Reais (Refs)</h3>
-                        <p class="text-xs text-slate-500">💡 <strong>Passe o mouse sobre o botão azul <code>Ref. XX</code></strong> para abrir a caixinha explicando do que é a dotação, vínculo e o que pode pagar nela.</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 no-print">
-                        <select id="selectOrdenacaoAba1" onchange="renderizarTudo()" class="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
-                            <option value="NUMERICA">🔢 Ordem Numérica (Ref)</option>
-                            <option value="SALDO_DESC">⬇️ Maior Saldo Livre</option>
-                            <option value="ALFABETICA">🔤 Ordem Alfabética (A-Z)</option>
-                        </select>
-                        <span class="text-xs font-semibold text-emerald-700" id="contadorRefsTabela">Exibindo 209 dotações</span>
-                    </div>
-                </div>
-                <div class="overflow-x-auto max-h-[480px]">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-900 text-white uppercase font-bold sticky top-0 z-20">
-                            <tr>
-                                <th class="py-3 px-3">Dotação (Passe o Mouse)</th>
-                                <th class="py-3 px-3">Ação / Programa</th>
-                                <th class="py-3 px-3">Vínculo (Fonte de Recurso)</th>
-                                <th class="py-3 px-3">Permissões de Uso</th>
-                                <th class="py-3 px-3 text-right">Atualizado</th>
-                                <th class="py-3 px-3 text-right">Empenhado</th>
-                                <th class="py-3 px-3 text-right">Reservado</th>
-                                <th class="py-3 px-3 text-right">Saldo Livre Real</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaResumoExecutivo" class="divide-y divide-slate-200"></tbody>
-                    </table>
                 </div>
             </div>
         </section>
@@ -234,7 +231,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 no-print">
                     <div class="md:col-span-3 relative">
                         <input type="text" id="inputBuscaNecessidade" oninput="filtrarAbaDotacoes()" 
-                            placeholder="Ex: Digite 'gaze', 'gase', 'seringa', 'ar-condicionado', 'transporte', 'aluguel', 'Julia Zanatta', '91'..." 
+                            placeholder="Ex: Digite 'gaze', 'gase', 'seringa', 'cadeira', 'combustível', 'aluguel', 'Julia Zanatta', '91'..." 
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none">
                         <i data-lucide="search" class="w-5 h-5 text-blue-600 absolute left-3 top-2.5"></i>
                     </div>
@@ -287,7 +284,7 @@
                             <option value="TODAS">🌐 Todas as Esferas</option>
                             <option value="MUNICIPAL">🏛️ Emendas Municipais (Vereadores)</option>
                             <option value="FEDERAL_ESTADUAL">🇧🇷 Federais / Estaduais (No IPM)</option>
-                            <option value="FNS_PDF">🛰️ Propostas Portal FNS (Extratos)</option>
+                            <option value="FNS_PDF">🛰️ Propostas Portal FNS (Em Liberação)</option>
                         </select>
                         <select id="selectOrdenacaoEmendas" onchange="renderizarEmendas()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-700">
                             <option value="SALDO_DESC">⬇️ Maior Saldo Livre</option>
