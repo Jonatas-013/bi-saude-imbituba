@@ -22,6 +22,24 @@ export const formatarBRL = (v) =>
 export const normalizarTexto = (str) =>
     (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+// Escapa texto antes de entrar em innerHTML (evita XSS vindo de CSV/Supabase/regras editadas)
+export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+// Dias corridos desde uma data dd/mm/aaaa (0 se a data for inválida)
+export function diasDesde(dataBR) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(dataBR || ''));
+    if (!m) return 0;
+    const ms = Date.now() - new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+    return Math.max(0, Math.floor(ms / 86400000));
+}
+
+export const debounce = (fn, ms = 180) => {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+};
+
 export function brToFloat(val) {
     if (!val) return 0;
     const s = String(val).trim();
